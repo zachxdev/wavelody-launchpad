@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { expandRests } from "./expandRests";
 import { parse } from "./parse";
 import { serialize } from "./serialize";
 
@@ -47,6 +48,24 @@ describe("serialize: round-trip basic 4/4", () => {
   it("is idempotent across two serialize cycles", () => {
     const second = serialize(parse(out));
     expect(canonicalize(second)).toBe(canonicalize(out));
+  });
+});
+
+describe("serialize: round-trip with_offsets", () => {
+  // Fixture uses NR for compactness; serialize emits expanded form (re-compression
+  // is out of scope per §5.9), so we compare against expandRests(original).
+  const original = readFixture("with_offsets");
+  const out = serialize(parse(original));
+
+  it("matches expanded input modulo whitespace", () => {
+    expect(canonicalize(out)).toBe(canonicalize(expandRests(original)));
+  });
+
+  it("preserves offset suffixes verbatim", () => {
+    expect(out).toContain("(B4:p:2)-1/2");
+    expect(out).toContain("(C4:mf:24)+1/2");
+    expect(out).toContain("(D4:mp:24)~1/3");
+    expect(out).toContain("(E4:mf:3)+3/7");
   });
 });
 

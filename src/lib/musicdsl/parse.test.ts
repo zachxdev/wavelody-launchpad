@@ -109,6 +109,40 @@ describe("parse: basic 4/4 fixture", () => {
   });
 });
 
+describe("parse: with_offsets fixture", () => {
+  const score = parse(readFixture("with_offsets"));
+
+  it("parses anticipation offset (-M/D) in RH", () => {
+    const note = score.bars[0].rows[0].voices.get("RH")?.notes[0];
+    expect(note?.offset).toEqual({ mode: "backward", fraction: { num: 1, den: 2 } });
+  });
+
+  it("parses forward offset (+M/D) in LH", () => {
+    const note = score.bars[0].rows[24].voices.get("LH")?.notes[0];
+    expect(note?.offset).toEqual({ mode: "forward", fraction: { num: 1, den: 2 } });
+  });
+
+  it("parses anchored offset (~M/D) in LH", () => {
+    const note = score.bars[0].rows[48].voices.get("LH")?.notes[0];
+    expect(note?.offset).toEqual({ mode: "anchored", fraction: { num: 1, den: 3 } });
+  });
+
+  it("parses septuplet offset (+3/7) in RH", () => {
+    const note = score.bars[0].rows[72].voices.get("RH")?.notes[0];
+    expect(note?.offset).toEqual({ mode: "forward", fraction: { num: 3, den: 7 } });
+  });
+
+  it("rejects offsets with M >= D", () => {
+    const text = `# VOICES: LH\nBAR, BEAT, STR, HAR, SUS, LH\n1, 1, -, -, -, (C4:mf:24)+5/4 |\n`;
+    expect(() => parse(text)).toThrow(/proper fraction/);
+  });
+
+  it("rejects offsets not in lowest terms", () => {
+    const text = `# VOICES: LH\nBAR, BEAT, STR, HAR, SUS, LH\n1, 1, -, -, -, (C4:mf:24)+2/4 |\n`;
+    expect(() => parse(text)).toThrow(/lowest terms/);
+  });
+});
+
 describe("parse: error reporting", () => {
   it("rejects unknown dynamic with line/column", () => {
     const text = `# VOICES: LH\nBAR, BEAT, STR, HAR, SUS, LH\n1, 1, -, -, -, (C4:zz:24) |\n`;
