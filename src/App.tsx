@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import AuthSuccess from "./pages/AuthSuccess.tsx";
-import AppPlaceholder from "./pages/AppPlaceholder.tsx";
+import Workspace from "./pages/Workspace.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -19,7 +19,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth-success" element={<AuthSuccess />} />
-          <Route path="/app" element={<AppPlaceholder />} />
+          <Route path="/app" element={<Workspace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
