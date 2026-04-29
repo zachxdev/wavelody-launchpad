@@ -18,3 +18,4 @@ export type {
 } from "./types";
 
 export { ParseError } from "./types";
+export { parse, computeResolution, pitchToMidi } from "./parse";
