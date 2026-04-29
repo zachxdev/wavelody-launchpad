@@ -1,0 +1,15 @@
+# TITLE: NR Compression Demo
+# COMPOSER: Wavelody
+# TEMPO: 120
+# TIME: 4/4
+# KEY: C major
+# RESOLUTION: 96
+# INSTRUMENTS: piano
+# VOICES: LH, RH
+BAR, BEAT, STR, HAR, SUS, LH, RH
+1, 1, <SECTION:A>, I, -, (C3:mf:96), (E4:mf:24)
+48R
+1, 50, -, -, -, -, (G4:mf:24)
+46R |
+2, 1, -, V, -, (G2:f:96), (D5:f:24)
+95R |

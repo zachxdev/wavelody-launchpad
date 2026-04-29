@@ -16,6 +16,7 @@ import {
   TimeSignature,
   VoiceCell,
 } from "./types";
+import { expandRests } from "./expandRests";
 
 const FIXED_LEADING_COLUMNS = ["BAR", "BEAT", "STR", "HAR", "SUS"];
 
@@ -469,38 +470,9 @@ function makeEmptyRow(bar: number, beat: number, voices: string[], endsBar: bool
   return { bar, beat, sustain: [], voices: voicesMap, endsBar };
 }
 
-function parseNRToken(
-  raw: string,
-  state: ParserState,
-): { count: number; endsBar: boolean } | null {
-  const m = /^(\d+)R(\s*\|)?$/.exec(raw.trim());
-  if (!m) return null;
-  const count = parseInt(m[1], 10);
-  if (count < 2) err(state, `NR count must be >= 2, got "${m[1]}R"`);
-  return { count, endsBar: m[2] !== undefined };
-}
-
-function expandNR(
-  count: number,
-  endsBar: boolean,
-  prevBar: number,
-  prevBeat: number,
-  voices: string[],
-): { rows: BeatRow[]; nextBar: number; nextBeat: number } {
-  const rows: BeatRow[] = [];
-  let beat = prevBeat;
-  for (let i = 0; i < count; i += 1) {
-    beat += 1;
-    const last = i === count - 1;
-    rows.push(makeEmptyRow(prevBar, beat, voices, last && endsBar));
-  }
-  const nextBar = endsBar ? prevBar + 1 : prevBar;
-  const nextBeat = endsBar ? 0 : beat;
-  return { rows, nextBar, nextBeat };
-}
-
 export function parse(source: string): Score {
-  const lines = source.split(/\r?\n/);
+  const expanded = expandRests(source);
+  const lines = expanded.split(/\r?\n/);
   const header: Partial<Header> = {};
   let hadHeaderBlock = false;
   let hadSchemaRow = false;
@@ -551,19 +523,6 @@ export function parse(source: string): Score {
         voices = Array.from({ length: inferred }, (_, k) => `V${k + 1}`);
         header.voices = voices;
       }
-    }
-
-    // NR token?
-    const nr = parseNRToken(trimmed, state);
-    if (nr !== null) {
-      if (rows.length === 0) {
-        err(state, `NR token cannot appear before any beat row`);
-      }
-      const last = rows[rows.length - 1];
-      const expanded = expandNR(nr.count, nr.endsBar, last.bar, last.beat, voices);
-      rows.push(...expanded.rows);
-      i += 1;
-      continue;
     }
 
     const { row } = parseBeatRow(trimmed, voices, state);

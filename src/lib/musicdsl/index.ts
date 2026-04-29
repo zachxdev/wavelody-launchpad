@@ -20,3 +20,4 @@ export type {
 export { ParseError } from "./types";
 export { parse, computeResolution, pitchToMidi } from "./parse";
 export { serialize } from "./serialize";
+export { expandRests } from "./expandRests";
