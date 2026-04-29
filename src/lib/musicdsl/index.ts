@@ -21,3 +21,5 @@ export { ParseError } from "./types";
 export { parse, computeResolution, pitchToMidi } from "./parse";
 export { serialize } from "./serialize";
 export { expandRests } from "./expandRests";
+export { extractVoices } from "./extractVoices";
+export type { NoteEvent, VoiceStream } from "./extractVoices";

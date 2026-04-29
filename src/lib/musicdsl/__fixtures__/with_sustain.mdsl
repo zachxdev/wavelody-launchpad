@@ -1,0 +1,19 @@
+# TITLE: Sustain Demo
+# COMPOSER: Wavelody
+# TEMPO: 60
+# TIME: 4/4
+# KEY: Ab major
+# RESOLUTION: 96
+# INSTRUMENTS: piano
+# VOICES: LH, RH
+BAR, BEAT, STR, HAR, SUS, LH, RH
+1, 1, <SECTION:A>, I, -, (Ab3:p:96s), (Eb5:mf:24)
+23R
+1, 25, -, -, -, -, (F5:mf:24)
+23R
+1, 49, -, -, -, -, (G5:mf:24)
+23R
+1, 73, -, -, -, -, (Ab5:mf:24)
+23R |
+2, 1, -, V, (Ab3:p), (Eb3:mp:96), (Eb5,G5,Bb5:f:96)
+95R |
