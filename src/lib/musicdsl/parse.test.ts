@@ -204,6 +204,48 @@ describe("parse: with_curves fixture", () => {
   });
 });
 
+describe("parse: odd_meter (5/4) fixture", () => {
+  const score = parse(readFixture("odd_meter"));
+
+  it("parses TIME 5/4 and RESOLUTION 480", () => {
+    expect(score.header.timeSignature).toEqual({ numerator: 5, denominator: 4 });
+    expect(score.header.resolution).toBe(480);
+  });
+
+  it("expands one bar to exactly 480 rows", () => {
+    expect(score.bars).toHaveLength(1);
+    expect(score.bars[0].rows).toHaveLength(480);
+    expect(score.bars[0].rows[479].endsBar).toBe(true);
+  });
+
+  it("places quintuplet RH pickups at the expected positions", () => {
+    const positions = [1, 97, 193, 289, 385];
+    for (const beat of positions) {
+      const cell = score.bars[0].rows[beat - 1].voices.get("RH");
+      expect(cell?.notes).toHaveLength(1);
+    }
+  });
+});
+
+describe("parse: no_headers fixture (v4 anonymized)", () => {
+  const score = parse(readFixture("no_headers"));
+
+  it("synthesizes a default header", () => {
+    expect(score.hadHeaderBlock).toBe(false);
+    expect(score.hadSchemaRow).toBe(true);
+    expect(score.header.tempo).toBe(120);
+    expect(score.header.timeSignature).toEqual({ numerator: 4, denominator: 4 });
+    expect(score.header.resolution).toBe(96);
+    expect(score.header.voices).toEqual(["V1", "V2"]);
+  });
+
+  it("expands the bar to 96 rows under default 4/4", () => {
+    expect(score.bars).toHaveLength(1);
+    expect(score.bars[0].rows).toHaveLength(96);
+    expect(score.bars[0].resolution).toBe(96);
+  });
+});
+
 describe("parse: error reporting", () => {
   it("rejects unknown dynamic with line/column", () => {
     const text = `# VOICES: LH\nBAR, BEAT, STR, HAR, SUS, LH\n1, 1, -, -, -, (C4:zz:24) |\n`;

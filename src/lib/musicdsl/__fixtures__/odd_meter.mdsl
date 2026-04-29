@@ -1,0 +1,19 @@
+# TITLE: 5/4 Etude
+# COMPOSER: Wavelody
+# TEMPO: 100
+# TIME: 5/4
+# KEY: D minor
+# RESOLUTION: 480
+# INSTRUMENTS: piano
+# VOICES: LH, RH
+BAR, BEAT, STR, HAR, SUS, LH, RH
+1, 1, <SECTION:A>, i, -, (D2:f:480), (D5:mp:96)
+95R
+1, 97, -, -, -, -, (E5:mp:96)
+95R
+1, 193, -, -, -, -, (F5:mp:96)
+95R
+1, 289, -, -, -, -, (G5:mp:96)
+95R
+1, 385, -, -, -, -, (A5:mp:96)
+95R |
