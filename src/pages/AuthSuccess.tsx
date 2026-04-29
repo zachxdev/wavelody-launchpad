@@ -6,7 +6,10 @@ const AuthSuccess = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const t = window.setTimeout(() => navigate("/app", { replace: true }), 800);
+    const t = window.setTimeout(() => {
+      sessionStorage.setItem("wavelody-session", "mock");
+      navigate("/app", { replace: true });
+    }, 800);
     return () => window.clearTimeout(t);
   }, [navigate]);
 
