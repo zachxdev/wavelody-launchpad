@@ -1,0 +1,72 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { parse } from "./parse";
+import { serialize } from "./serialize";
+
+const FIXTURE_DIR = join(__dirname, "__fixtures__");
+const readFixture = (name: string) =>
+  readFileSync(join(FIXTURE_DIR, `${name}.mdsl`), "utf-8");
+
+function canonicalize(text: string): string {
+  // Normalize whitespace: trim each line, collapse runs of spaces, drop trailing newlines, then re-add one.
+  return text
+    .split(/\r?\n/)
+    .map((l) => l.replace(/\s+/g, " ").trim())
+    .filter((l) => l !== "")
+    .join("\n")
+    .concat("\n");
+}
+
+describe("serialize: round-trip basic 4/4", () => {
+  const original = readFixture("basic_4-4");
+  const score = parse(original);
+  const out = serialize(score);
+
+  it("produces text equal to input modulo whitespace", () => {
+    expect(canonicalize(out)).toBe(canonicalize(original));
+  });
+
+  it("re-parses identically (parse(serialize(s)) === parse(s))", () => {
+    const reparsed = parse(out);
+    expect(reparsed.bars).toHaveLength(score.bars.length);
+    for (let b = 0; b < score.bars.length; b += 1) {
+      const a = score.bars[b];
+      const c = reparsed.bars[b];
+      expect(c.index).toBe(a.index);
+      expect(c.resolution).toBe(a.resolution);
+      expect(c.rows.length).toBe(a.rows.length);
+      for (let r = 0; r < a.rows.length; r += 1) {
+        expect(c.rows[r].bar).toBe(a.rows[r].bar);
+        expect(c.rows[r].beat).toBe(a.rows[r].beat);
+        expect(c.rows[r].endsBar).toBe(a.rows[r].endsBar);
+      }
+    }
+  });
+
+  it("is idempotent across two serialize cycles", () => {
+    const second = serialize(parse(out));
+    expect(canonicalize(second)).toBe(canonicalize(out));
+  });
+});
+
+describe("serialize: structural fidelity", () => {
+  const score = parse(readFixture("basic_4-4"));
+  const out = serialize(score);
+
+  it("emits bar 1 line 1 with chord intact", () => {
+    const lines = out.split("\n");
+    const firstRow = lines.find((l) => l.startsWith("1, 1,"));
+    expect(firstRow).toBeDefined();
+    expect(firstRow).toContain("(C3:mf:96)");
+    expect(firstRow).toContain("(E4,G4,C5:mf:24)");
+    expect(firstRow).toContain("<SECTION:A>");
+  });
+
+  it("ends each bar with the | delimiter", () => {
+    const lines = out.split("\n").filter((l) => l.includes("|"));
+    expect(lines.length).toBe(2);
+    expect(lines[0]).toMatch(/^1, 96, .* \|$/);
+    expect(lines[1]).toMatch(/^2, 96, .* \|$/);
+  });
+});
