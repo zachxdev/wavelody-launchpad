@@ -1,0 +1,18 @@
+# TITLE: Control Curves
+# COMPOSER: Wavelody
+# TEMPO: 100
+# TIME: 4/4
+# KEY: G major
+# RESOLUTION: 96
+# INSTRUMENTS: piano
+# VOICES: LH, RH
+BAR, BEAT, STR, HAR, SUS, LH, RH
+1, 1, <SECTION:A>, V, -, (G2:f:96#d), (D5:f:96#m)J0.3Y0.5
+23R
+1, 25, -, -, -, Y#d:0.4, J1.5
+23R
+1, 49, -, -, -, y#d, y
+23R
+1, 73, -, -, -, -, j#m:0
+22R
+1, 96, -, -, -, j1, - |

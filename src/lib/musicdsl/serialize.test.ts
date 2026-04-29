@@ -69,6 +69,23 @@ describe("serialize: round-trip with_offsets", () => {
   });
 });
 
+describe("serialize: round-trip with_curves", () => {
+  const original = readFixture("with_curves");
+  const out = serialize(parse(original));
+
+  it("matches expanded input modulo whitespace", () => {
+    expect(canonicalize(out)).toBe(canonicalize(expandRests(original)));
+  });
+
+  it("preserves curve token forms verbatim", () => {
+    expect(out).toContain("(G2:f:96#d)");
+    expect(out).toContain("(D5:f:96#m)J0.3Y0.5");
+    expect(out).toContain("Y#d:0.4");
+    expect(out).toContain("y#d");
+    expect(out).toContain("j#m:0");
+  });
+});
+
 describe("serialize: structural fidelity", () => {
   const score = parse(readFixture("basic_4-4"));
   const out = serialize(score);

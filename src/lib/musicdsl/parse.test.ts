@@ -143,6 +143,67 @@ describe("parse: with_offsets fixture", () => {
   });
 });
 
+describe("parse: with_curves fixture", () => {
+  const score = parse(readFixture("with_curves"));
+
+  it("attaches tags to notes", () => {
+    const lh = score.bars[0].rows[0].voices.get("LH")?.notes[0];
+    const rh = score.bars[0].rows[0].voices.get("RH")?.notes[0];
+    expect(lh?.tag).toBe("d");
+    expect(rh?.tag).toBe("m");
+  });
+
+  it("parses master J + Y waypoints in the same cell", () => {
+    const rh = score.bars[0].rows[0].voices.get("RH");
+    expect(rh?.curves).toEqual([
+      { dim: "J", releases: false, value: 0.3, scope: "master" },
+      { dim: "Y", releases: false, value: 0.5, scope: "master" },
+    ]);
+  });
+
+  it("distinguishes uppercase waypoint from lowercase release via `releases`", () => {
+    const lh25 = score.bars[0].rows[24].voices.get("LH");
+    expect(lh25?.curves).toEqual([
+      { dim: "Y", releases: false, value: 0.4, scope: "d" },
+    ]);
+    const rh25 = score.bars[0].rows[24].voices.get("RH");
+    expect(rh25?.curves).toEqual([
+      { dim: "J", releases: false, value: 1.5, scope: "master" },
+    ]);
+  });
+
+  it("parses tagged release with no value (j#d)", () => {
+    const lh49 = score.bars[0].rows[48].voices.get("LH");
+    expect(lh49?.curves).toEqual([
+      { dim: "Y", releases: true, value: null, scope: "d" },
+    ]);
+  });
+
+  it("parses tagged sudden cut as j#m:0 (releases=true, value=0)", () => {
+    const rh73 = score.bars[0].rows[72].voices.get("RH");
+    expect(rh73?.curves).toEqual([
+      { dim: "J", releases: true, value: 0, scope: "m" },
+    ]);
+  });
+
+  it("parses release with explicit end value (j1.0)", () => {
+    const lh96 = score.bars[0].rows[95].voices.get("LH");
+    expect(lh96?.curves).toEqual([
+      { dim: "J", releases: true, value: 1, scope: "master" },
+    ]);
+  });
+
+  it("rejects out-of-range curve value", () => {
+    const text = `# VOICES: LH\nBAR, BEAT, STR, HAR, SUS, LH\n1, 1, -, -, -, J3.5 |\n`;
+    expect(() => parse(text)).toThrow(/out of range/);
+  });
+
+  it("rejects uppercase waypoint without value", () => {
+    const text = `# VOICES: LH\nBAR, BEAT, STR, HAR, SUS, LH\n1, 1, -, -, -, J |\n`;
+    expect(() => parse(text)).toThrow(/requires a value/);
+  });
+});
+
 describe("parse: error reporting", () => {
   it("rejects unknown dynamic with line/column", () => {
     const text = `# VOICES: LH\nBAR, BEAT, STR, HAR, SUS, LH\n1, 1, -, -, -, (C4:zz:24) |\n`;
