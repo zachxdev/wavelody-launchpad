@@ -32,10 +32,29 @@ describe("computeResolution", () => {
     [{ numerator: 2, denominator: 4 }, 96],
     [{ numerator: 6, denominator: 8 }, 96],
     [{ numerator: 12, denominator: 8 }, 96],
-    [{ numerator: 9, denominator: 8 }, 288],
+    [{ numerator: 9, denominator: 8 }, 144],
     [{ numerator: 5, denominator: 4 }, 480],
-  ] as const)("resolution(%o) = %i", (ts, expected) => {
+    [{ numerator: 7, denominator: 8 }, 112],
+  ] as const)("canonical resolution(%o) = %i", (ts, expected) => {
     expect(computeResolution(ts)).toBe(expected);
+  });
+
+  it("falls back to numerator*24 for unlisted x/4 meters", () => {
+    expect(computeResolution({ numerator: 11, denominator: 4 })).toBe(264);
+  });
+
+  it("falls back to numerator*16 for unlisted x/8 meters", () => {
+    expect(computeResolution({ numerator: 13, denominator: 8 })).toBe(208);
+  });
+
+  it("falls back to 96 floor for very small unlisted meters", () => {
+    expect(computeResolution({ numerator: 1, denominator: 4 })).toBe(96);
+    expect(computeResolution({ numerator: 1, denominator: 8 })).toBe(96);
+  });
+
+  it("rejects unsupported denominators", () => {
+    expect(() => computeResolution({ numerator: 4, denominator: 2 })).toThrow(ParseError);
+    expect(() => computeResolution({ numerator: 4, denominator: 16 })).toThrow(ParseError);
   });
 });
 
@@ -227,8 +246,8 @@ describe("parse: odd_meter (5/4) fixture", () => {
   });
 });
 
-describe("parse: no_headers fixture (v4 anonymized)", () => {
-  const score = parse(readFixture("no_headers"));
+describe("parse: anonymized fixture (v4)", () => {
+  const score = parse(readFixture("anonymized"));
 
   it("synthesizes a default header", () => {
     expect(score.hadHeaderBlock).toBe(false);

@@ -51,22 +51,36 @@ function gcd(a: number, b: number): number {
   return x;
 }
 
-function lcm(a: number, b: number): number {
-  if (a === 0 || b === 0) return 0;
-  return Math.abs((a / gcd(a, b)) * b);
-}
+// Per spec §2.3 (revised): the closed-form lcm(96, numerator * 4/denominator) was
+// superseded — its values are inconsistent with the canonical table (e.g. 288 for
+// 9/8 where the canonical resolution is 144). The lookup table is authoritative;
+// new meters should be added to the table rather than derived.
+const CANONICAL_RESOLUTIONS: Record<string, number> = {
+  "4/4": 96,
+  "3/4": 96,
+  "2/4": 96,
+  "6/8": 96,
+  "9/8": 144,
+  "12/8": 96,
+  "5/4": 480,
+  "7/8": 112,
+};
 
 export function computeResolution(time: TimeSignature): number {
-  // Formula: lcm(96, numerator * (4 / denominator)).
-  // Computed in rational form to handle cases where 4/denominator is not an integer
-  // (e.g. 9/8 → numerator*4/denominator = 9/2, lcm(96, 9/2) = 288).
   const { numerator, denominator } = time;
-  const n = numerator * 4;
-  const d = denominator;
-  const g = gcd(n, d);
-  const nReduced = n / g;
-  const dReduced = d / g;
-  return lcm(96 * dReduced, nReduced) / dReduced;
+  const key = `${numerator}/${denominator}`;
+  const canonical = CANONICAL_RESOLUTIONS[key];
+  if (canonical !== undefined) return canonical;
+  // Fallback for genuinely unlisted meters (per §2.3): conservative defaults
+  // chosen to subdivide cleanly per beat unit. Non-/4 and non-/8 denominators
+  // are rejected — /2 and /16 are not yet supported.
+  if (denominator === 4) return Math.max(96, numerator * 24);
+  if (denominator === 8) return Math.max(96, numerator * 16);
+  throw new ParseError(
+    `Unsupported time signature denominator: ${key} (only /4 and /8 are supported)`,
+    1,
+    1,
+  );
 }
 
 export function pitchToMidi(step: PitchStep, alter: -1 | 0 | 1, octave: number): number {
