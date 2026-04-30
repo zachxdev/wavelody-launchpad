@@ -144,27 +144,30 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
       const x = clientX - rect.left - LANE_PITCH_RULER_WIDTH - panX;
       return beatToBarIndex(x / pxPerBeat);
     };
-    const startBar = xToBar(e.clientX);
-    setDrag({ startBar, endBar: startBar });
+    // Track the live drag in a closure-local variable so onUp can read the
+    // final state without going through setDrag's updater (which must be
+    // pure — setState on a different component from inside an updater
+    // triggers React's "update during render" warning).
+    let liveDrag: { startBar: number; endBar: number } = {
+      startBar: xToBar(e.clientX),
+      endBar: xToBar(e.clientX),
+    };
+    setDrag(liveDrag);
 
     const onMove = (ev: MouseEvent) => {
-      const bar = xToBar(ev.clientX);
-      setDrag((prev) => (prev ? { ...prev, endBar: bar } : prev));
+      liveDrag = { ...liveDrag, endBar: xToBar(ev.clientX) };
+      setDrag(liveDrag);
     };
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
-      setDrag((d) => {
-        if (d) {
-          const lo = Math.min(d.startBar, d.endBar);
-          const hi = Math.max(d.startBar, d.endBar);
-          const next: Selection = selectedVoice
-            ? { kind: "range", voice: selectedVoice, startBar: lo, endBar: hi }
-            : { kind: "range", startBar: lo, endBar: hi };
-          onSelectionChange(next);
-        }
-        return null;
-      });
+      const lo = Math.min(liveDrag.startBar, liveDrag.endBar);
+      const hi = Math.max(liveDrag.startBar, liveDrag.endBar);
+      const next: Selection = selectedVoice
+        ? { kind: "range", voice: selectedVoice, startBar: lo, endBar: hi }
+        : { kind: "range", startBar: lo, endBar: hi };
+      setDrag(null);
+      onSelectionChange(next);
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);

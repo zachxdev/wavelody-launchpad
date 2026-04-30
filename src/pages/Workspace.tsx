@@ -121,9 +121,6 @@ const Workspace = () => {
                 <p className="text-sm text-muted-foreground/60">Loading score…</p>
               </div>
             )}
-            <pre className="absolute right-3 top-3 rounded bg-card/80 px-2 py-1 text-[10px] text-muted-foreground">
-              {JSON.stringify(selection)}
-            </pre>
           </div>
         </main>
 
