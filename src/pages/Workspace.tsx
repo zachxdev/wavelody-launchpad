@@ -7,6 +7,11 @@ import MixerPane from "@/components/shell/MixerPane";
 import { MixerChannel } from "@/components/shell/MixerRow";
 import PromptDock from "@/components/shell/PromptDock";
 import { Pass } from "@/components/shell/PassCard";
+import PianoRoll from "@/components/editor/PianoRoll";
+import { NO_SELECTION, type Selection } from "@/components/editor/selection";
+import { parse, type Score } from "@/lib/musicdsl";
+
+const FIXTURE_URL = "/fixtures/basic_4-4.mdsl";
 
 const INITIAL_PASSES: Pass[] = [
   {
@@ -42,6 +47,10 @@ const Workspace = () => {
   const [dockOpen, setDockOpen] = useState(true);
   const [promptText, setPromptText] = useState("");
 
+  const [score, setScore] = useState<Score | null>(null);
+  const [selection, setSelection] = useState<Selection>(NO_SELECTION);
+  const [playhead] = useState(0);
+
   useEffect(() => {
     const session = sessionStorage.getItem("wavelody-session");
     if (!session) {
@@ -50,6 +59,23 @@ const Workspace = () => {
     }
     setAuthChecked(true);
   }, [navigate]);
+
+  useEffect(() => {
+    if (!authChecked) return;
+    let cancelled = false;
+    fetch(FIXTURE_URL)
+      .then((r) => r.text())
+      .then((text) => {
+        if (cancelled) return;
+        setScore(parse(text));
+      })
+      .catch((e: unknown) => {
+        console.error("Failed to load fixture", e);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authChecked]);
 
   if (!authChecked) return null;
 
@@ -82,15 +108,22 @@ const Workspace = () => {
             bar={1}
             totalBars={8}
           />
-          <div className="flex flex-1 items-center justify-center p-8">
-            <div className="text-center">
-              <p className="font-serif-display text-xl tracking-tight text-muted-foreground">
-                Score editor mounts here.
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground/60">
-                Piano Roll and MDSL Grid views — Phase 4 and 5.
-              </p>
-            </div>
+          <div className="relative flex-1 min-h-0">
+            {score ? (
+              <PianoRoll
+                score={score}
+                playhead={playhead}
+                selection={selection}
+                onSelectionChange={setSelection}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-sm text-muted-foreground/60">Loading score…</p>
+              </div>
+            )}
+            <pre className="absolute right-3 top-3 rounded bg-card/80 px-2 py-1 text-[10px] text-muted-foreground">
+              {JSON.stringify(selection)}
+            </pre>
           </div>
         </main>
 
