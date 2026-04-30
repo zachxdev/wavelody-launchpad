@@ -41,9 +41,22 @@ interface VoiceLane {
 }
 
 const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollProps) => {
-  void selection;
-  void onSelectionChange;
   const pxPerBeat = DEFAULT_PX_PER_BEAT;
+
+  const selectedVoice =
+    selection.kind === "voice" || selection.kind === "range" ? selection.voice : undefined;
+
+  const toggleVoice = (voice: string) => {
+    if (selectedVoice === voice && selection.kind === "voice") {
+      onSelectionChange({ kind: "none" });
+    } else {
+      onSelectionChange({ kind: "voice", voice });
+    }
+  };
+
+  const clearSelection = () => {
+    if (selection.kind !== "none") onSelectionChange({ kind: "none" });
+  };
 
   // Total bar count and rows-per-beat from the first bar drive x scaling.
   const firstBar = score.bars[0];
@@ -95,6 +108,10 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
         height={totalHeight}
         className="block select-none"
         style={{ minWidth: "100%" }}
+        onClick={(e) => {
+          // Background click on the SVG root clears selection unless a child handler stopped it.
+          if (e.target === e.currentTarget) clearSelection();
+        }}
       >
         {/* Pitch-ruler column background */}
         <rect
@@ -159,13 +176,17 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
         {/* Lanes */}
         {lanes.map((lane) => (
           <g key={lane.voice}>
-            {/* Lane background */}
+            {/* Lane background — clicking it clears the selection */}
             <rect
               x={LANE_PITCH_RULER_WIDTH}
               y={lane.yTop}
               width={contentWidth}
               height={lane.height}
               fill="hsl(240 18% 7%)"
+              onClick={(e) => {
+                e.stopPropagation();
+                clearSelection();
+              }}
             />
             {/* Lane bottom border */}
             <line
@@ -176,13 +197,18 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
               stroke="hsl(240 10% 16%)"
               strokeWidth={1}
             />
-            {/* Pitch ruler header (lane title + octave labels) */}
+            {/* Pitch ruler header (lane title + octave labels) — clickable for voice selection */}
             <rect
               x={0}
               y={lane.yTop}
               width={LANE_PITCH_RULER_WIDTH}
               height={lane.height}
-              fill="hsl(240 14% 9%)"
+              fill={selectedVoice === lane.voice ? "hsl(173 80% 14%)" : "hsl(240 14% 9%)"}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleVoice(lane.voice);
+              }}
             />
             <line
               x1={4}
@@ -190,7 +216,8 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
               x2={4}
               y2={lane.yTop + lane.height - 2}
               stroke={voiceColor(lane.voice)}
-              strokeWidth={2}
+              strokeWidth={selectedVoice === lane.voice ? 3 : 2}
+              pointerEvents="none"
             />
             <text
               x={12}
@@ -198,6 +225,7 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
               fill="hsl(0 0% 96%)"
               fontSize={11}
               fontFamily="ui-monospace, monospace"
+              pointerEvents="none"
             >
               {lane.voice}
             </text>
