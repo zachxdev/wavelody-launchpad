@@ -15,6 +15,7 @@ import MdslGrid from "@/components/editor/MdslGrid";
 import { NO_SELECTION, type Selection } from "@/components/editor/selection";
 import { parse, type Score } from "@/lib/musicdsl";
 import { Transport, synthesizeStemsForScore } from "@/lib/audio";
+import { clearSession, getSession } from "@/lib/auth/client";
 
 const FIXTURE_URL = "/fixtures/piano_trio.mdsl";
 
@@ -61,8 +62,13 @@ const Workspace = () => {
   const [audioStatus, setAudioStatus] = useState<AudioStatus>("idle");
 
   useEffect(() => {
-    const session = sessionStorage.getItem("wavelody-session");
+    // Decode the stored JWT shape + check expiry. Signature verification is
+    // server-side only on subsequent /api/* calls — this is just a fast
+    // client-side gate to avoid rendering the workspace for an obviously
+    // bogus or expired token.
+    const session = getSession();
     if (!session) {
+      clearSession();
       navigate("/", { replace: true });
       return;
     }

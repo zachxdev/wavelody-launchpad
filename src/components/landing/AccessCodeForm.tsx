@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { AuthError, postAuth } from "@/lib/auth/client";
 
 const AccessCodeForm = () => {
   const navigate = useNavigate();
@@ -23,17 +24,10 @@ const AccessCodeForm = () => {
 
     setSubmitting(true);
     try {
-      // Mock: any non-empty code returns 200. Real endpoint can replace this.
-      try {
-        await fetch("/api/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code: trimmed }),
-        });
-      } catch {
-        // Network failure during private preview is non-fatal for the mock.
-      }
+      await postAuth(trimmed);
       navigate("/auth-success");
+    } catch (err: unknown) {
+      setError(messageFor(err));
     } finally {
       setSubmitting(false);
     }
@@ -95,5 +89,21 @@ const AccessCodeForm = () => {
     </Card>
   );
 };
+
+function messageFor(err: unknown): string {
+  if (err instanceof AuthError) {
+    if (err.status === 429) {
+      return "All codes for this tier are at quota. Email access@wavelody.com for more.";
+    }
+    if (err.status >= 500) {
+      return "Auth service unavailable, please try again in a moment.";
+    }
+    return err.message || "Code not recognized.";
+  }
+  if (err instanceof TypeError) {
+    return "Network error. Check your connection and try again.";
+  }
+  return "Something went wrong. Please try again.";
+}
 
 export default AccessCodeForm;
