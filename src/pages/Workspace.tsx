@@ -142,13 +142,34 @@ const Workspace = () => {
     : "—";
   const beatsPerBar = score?.header.timeSignature.numerator ?? 4;
   const totalBars = score?.bars.length ?? 1;
-  const currentBar = Math.floor(currentBeat / beatsPerBar) + 1;
-  const beatInBar = currentBeat - (currentBar - 1) * beatsPerBar + 1;
+  // Clamp the displayed playhead to [0, totalBars*beatsPerBar - epsilon] so
+  // overshoot past the end of the rendered audio doesn't show e.g. "Bar 33".
+  // (Auto-stop at end is a separate concern; tracked for a follow-up.)
+  const maxBeat = totalBars * beatsPerBar - 1e-6;
+  const clampedBeat = Math.max(0, Math.min(currentBeat, maxBeat));
+  const currentBar = Math.floor(clampedBeat / beatsPerBar) + 1;
+  const beatInBar = clampedBeat - (currentBar - 1) * beatsPerBar + 1;
   const beatInt = Math.floor(beatInBar);
   const beatFrac = Math.max(0, beatInBar - beatInt);
   const positionStr = `${currentBar}:${beatInt}.${Math.floor(beatFrac * 1000)
     .toString()
     .padStart(3, "0")}`;
+
+  // Map playhead to an MdslGrid row location: 0-based row index inside the
+  // current bar. Resolution comes from the corresponding bar so mid-piece
+  // <RESOLUTION:N> overrides will Just Work once we tighten that path.
+  const gridPlayhead = (() => {
+    if (!score) return undefined;
+    const bar = score.bars.find((b) => b.index === currentBar);
+    if (!bar) return undefined;
+    const rowsPerBeat = bar.resolution / bar.timeSignature.numerator;
+    const beatInBarZero = Math.max(0, clampedBeat - (currentBar - 1) * beatsPerBar);
+    const rowIndex = Math.min(
+      bar.rows.length - 1,
+      Math.floor(beatInBarZero * rowsPerBeat),
+    );
+    return { bar: currentBar, rowIndex };
+  })();
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
@@ -185,7 +206,7 @@ const Workspace = () => {
               view === "piano-roll" ? (
                 <PianoRoll
                   score={score}
-                  playhead={currentBeat}
+                  playhead={clampedBeat}
                   selection={selection}
                   onSelectionChange={setSelection}
                 />
@@ -194,6 +215,7 @@ const Workspace = () => {
                   score={score}
                   selection={selection}
                   onSelectionChange={setSelection}
+                  playhead={gridPlayhead}
                 />
               )
             ) : (

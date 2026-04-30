@@ -16,6 +16,12 @@ interface MdslGridProps {
   score: Score;
   selection: Selection;
   onSelectionChange: (next: Selection) => void;
+  /**
+   * The currently-playing row, identified by 1-based bar number and 0-based
+   * row index within the bar. Undefined → no playhead is shown (e.g. before
+   * any audio loads).
+   */
+  playhead?: { bar: number; rowIndex: number };
 }
 
 const META_COLUMNS = ["STR", "HAR", "SUS"] as const;
@@ -26,7 +32,12 @@ const GUTTER_WIDTH = 56;
 const META_COL_WIDTH = 96;
 const VOICE_COL_WIDTH = 168; // sized to fit (Db4,F4,Ab4:mf:192) + a little.
 
-const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
+const MdslGrid = ({
+  score,
+  selection,
+  onSelectionChange,
+  playhead,
+}: MdslGridProps) => {
   const voices = score.header.voices;
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<{ startBar: number; endBar: number } | null>(null);
@@ -167,6 +178,7 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
   return (
     <div
       ref={wrapperRef}
+      data-playhead={playhead ? `${playhead.bar}:${playhead.rowIndex}` : "none"}
       className="relative h-full w-full overflow-auto bg-background font-mono text-xs text-foreground"
       onWheel={onWheel}
       onClick={(e) => {
@@ -216,13 +228,24 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
           if (d.kind === "collapsed") {
             const key = collapseKey(d.bar, d.startIdx);
             const inRange = isBarInRange(d.bar);
+            const playing =
+              playhead !== undefined &&
+              playhead.bar === d.bar &&
+              playhead.rowIndex >= d.startIdx &&
+              playhead.rowIndex <= d.endIdx;
+            const playingBg = playing ? "hsl(173 80% 40% / 0.18)" : undefined;
+            const bg = playingBg ?? (inRange ? "hsl(173 80% 40% / 0.08)" : undefined);
             return (
               <div key={`collapsed-${key}`} className="contents">
                 <div
                   data-bar={d.bar}
                   onMouseDown={(e) => onGutterMouseDown(e, d.bar)}
                   className="flex items-center"
-                  style={{ height: rowHeight, backgroundColor: inRange ? "hsl(173 80% 40% / 0.08)" : undefined }}
+                  style={{
+                    height: rowHeight,
+                    backgroundColor: bg,
+                    borderLeft: playing ? "2px solid hsl(173 80% 55%)" : "2px solid transparent",
+                  }}
                 >
                   <button
                     type="button"
@@ -241,7 +264,7 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                   style={{
                     gridColumn: `2 / span ${META_COLUMNS.length + voices.length}`,
                     height: rowHeight,
-                    backgroundColor: inRange ? "hsl(173 80% 40% / 0.08)" : undefined,
+                    backgroundColor: bg,
                   }}
                 >
                   ·
@@ -264,7 +287,12 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
             `${row.bar}:${d.rowIndexInBar}`,
           );
           const inRange = isBarInRange(row.bar);
-          const rangeBg = inRange ? "hsl(173 80% 40% / 0.08)" : undefined;
+          const playing =
+            playhead !== undefined &&
+            playhead.bar === row.bar &&
+            playhead.rowIndex === d.rowIndexInBar;
+          const playingBg = playing ? "hsl(173 80% 40% / 0.18)" : undefined;
+          const rangeBg = playingBg ?? (inRange ? "hsl(173 80% 40% / 0.08)" : undefined);
           return (
             <div key={`row-${row.bar}-${row.beat}`} className="contents">
               <div
@@ -280,7 +308,13 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                 className={`flex items-center px-2 text-muted-foreground/70 ${borderClass} ${
                   collapseKeyForRow ? "cursor-pointer hover:bg-secondary/40 hover:text-foreground" : "cursor-row-resize"
                 }`}
-                style={{ height: rowHeight, backgroundColor: rangeBg }}
+                style={{
+                  height: rowHeight,
+                  backgroundColor: rangeBg,
+                  borderLeft: playing
+                    ? "2px solid hsl(173 80% 55%)"
+                    : "2px solid transparent",
+                }}
               >
                 {formatRowLabel(row.bar, row.beat)}
               </div>
