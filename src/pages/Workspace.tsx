@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TopBar from "@/components/shell/TopBar";
 import PassesPane from "@/components/shell/PassesPane";
-import ScoreToolbar, { ScoreView } from "@/components/shell/ScoreToolbar";
+import ScoreToolbar, {
+  ScoreView,
+  type AudioStatus,
+} from "@/components/shell/ScoreToolbar";
 import MixerPane from "@/components/shell/MixerPane";
 import { MixerChannel } from "@/components/shell/MixerRow";
 import PromptDock from "@/components/shell/PromptDock";
@@ -55,6 +58,7 @@ const Workspace = () => {
   const [currentBeat, setCurrentBeat] = useState(0);
   const transportRef = useRef<Transport | null>(null);
   const [voicesReady, setVoicesReady] = useState(false);
+  const [audioStatus, setAudioStatus] = useState<AudioStatus>("idle");
 
   useEffect(() => {
     const session = sessionStorage.getItem("wavelody-session");
@@ -104,14 +108,23 @@ const Workspace = () => {
 
     // Synthesize placeholder stems and load into the transport.
     // Real WAV stems via loader.ts will land here in Phase 8.
+    setAudioStatus("loading");
+    let cancelled = false;
     synthesizeStemsForScore(score)
       .then((stems) => transport.load(stems))
-      .then(() => setVoicesReady(true))
+      .then(() => {
+        if (cancelled) return;
+        setVoicesReady(true);
+        setAudioStatus("ready");
+      })
       .catch((e: unknown) => {
+        if (cancelled) return;
         console.error("Failed to synthesize stems", e);
+        setAudioStatus("error");
       });
 
     return () => {
+      cancelled = true;
       offTick();
       offPlay();
       offPause();
@@ -119,6 +132,7 @@ const Workspace = () => {
       transport.dispose();
       transportRef.current = null;
       setVoicesReady(false);
+      setAudioStatus("idle");
     };
   }, [score]);
 
@@ -229,6 +243,7 @@ const Workspace = () => {
             position={positionStr}
             bar={currentBar}
             totalBars={totalBars}
+            audioStatus={audioStatus}
           />
           <div className="relative flex-1 min-h-0">
             {score ? (
