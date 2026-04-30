@@ -6,3 +6,4 @@ export type {
 } from "./transport";
 export { decodeWavFromUrl, loadStemsForScore } from "./loader";
 export type { StemLoadResult } from "./loader";
+export { synthesizeStemsForScore, synthesizeVoiceBuffer } from "./synth";
