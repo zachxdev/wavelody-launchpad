@@ -8,6 +8,7 @@ import { MixerChannel } from "@/components/shell/MixerRow";
 import PromptDock from "@/components/shell/PromptDock";
 import { Pass } from "@/components/shell/PassCard";
 import PianoRoll from "@/components/editor/PianoRoll";
+import MdslGrid from "@/components/editor/MdslGrid";
 import { NO_SELECTION, type Selection } from "@/components/editor/selection";
 import { parse, type Score } from "@/lib/musicdsl";
 
@@ -110,12 +111,20 @@ const Workspace = () => {
           />
           <div className="relative flex-1 min-h-0">
             {score ? (
-              <PianoRoll
-                score={score}
-                playhead={playhead}
-                selection={selection}
-                onSelectionChange={setSelection}
-              />
+              view === "piano-roll" ? (
+                <PianoRoll
+                  score={score}
+                  playhead={playhead}
+                  selection={selection}
+                  onSelectionChange={setSelection}
+                />
+              ) : (
+                <MdslGrid
+                  score={score}
+                  selection={selection}
+                  onSelectionChange={setSelection}
+                />
+              )
             ) : (
               <div className="flex h-full items-center justify-center">
                 <p className="text-sm text-muted-foreground/60">Loading score…</p>
