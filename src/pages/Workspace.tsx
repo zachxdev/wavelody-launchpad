@@ -54,6 +54,7 @@ const Workspace = () => {
   const [selection, setSelection] = useState<Selection>(NO_SELECTION);
   const [currentBeat, setCurrentBeat] = useState(0);
   const transportRef = useRef<Transport | null>(null);
+  const [voicesReady, setVoicesReady] = useState(false);
 
   useEffect(() => {
     const session = sessionStorage.getItem("wavelody-session");
@@ -105,6 +106,7 @@ const Workspace = () => {
     // Real WAV stems via loader.ts will land here in Phase 8.
     synthesizeStemsForScore(score)
       .then((stems) => transport.load(stems))
+      .then(() => setVoicesReady(true))
       .catch((e: unknown) => {
         console.error("Failed to synthesize stems", e);
       });
@@ -116,8 +118,28 @@ const Workspace = () => {
       offStop();
       transport.dispose();
       transportRef.current = null;
+      setVoicesReady(false);
     };
   }, [score]);
+
+  // Reflect mixer state onto the live transport whenever it changes — and
+  // again once voicesReady flips so the initial defaults reach the per-voice
+  // Tone.Channel nodes that only exist after load() completes.
+  useEffect(() => {
+    const t = transportRef.current;
+    if (!t) return;
+    t.setMasterGain(master);
+  }, [master, voicesReady]);
+
+  useEffect(() => {
+    const t = transportRef.current;
+    if (!t) return;
+    for (const ch of channels) {
+      t.setVoiceGain(ch.name, ch.gain);
+      t.setVoiceMuted(ch.name, ch.muted);
+      t.setVoiceSolo(ch.name, ch.soloed);
+    }
+  }, [channels, voicesReady]);
 
   if (!authChecked) return null;
 
