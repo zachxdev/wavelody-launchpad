@@ -19,7 +19,9 @@ interface MdslGridProps {
 }
 
 const META_COLUMNS = ["STR", "HAR", "SUS"] as const;
-const ROW_HEIGHT = 24;
+const DEFAULT_ROW_HEIGHT = 24;
+const MIN_ROW_HEIGHT = 16;
+const MAX_ROW_HEIGHT = 40;
 const GUTTER_WIDTH = 56;
 const META_COL_WIDTH = 96;
 const VOICE_COL_WIDTH = 168; // sized to fit (Db4,F4,Ab4:mf:192) + a little.
@@ -28,6 +30,16 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
   const voices = score.header.voices;
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<{ startBar: number; endBar: number } | null>(null);
+  const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT);
+
+  const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!(e.ctrlKey || e.metaKey)) return; // plain wheel → native vertical scroll
+    e.preventDefault();
+    const delta = -e.deltaY * 0.1;
+    setRowHeight((prev) =>
+      Math.max(MIN_ROW_HEIGHT, Math.min(MAX_ROW_HEIGHT, Math.round(prev + delta))),
+    );
+  };
 
   const selectedVoice =
     selection.kind === "voice" || selection.kind === "range"
@@ -156,6 +168,7 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
     <div
       ref={wrapperRef}
       className="relative h-full w-full overflow-auto bg-background font-mono text-xs text-foreground"
+      onWheel={onWheel}
       onClick={(e) => {
         if (e.target === e.currentTarget) clearSelection();
       }}
@@ -209,7 +222,7 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                   data-bar={d.bar}
                   onMouseDown={(e) => onGutterMouseDown(e, d.bar)}
                   className="flex items-center"
-                  style={{ height: ROW_HEIGHT, backgroundColor: inRange ? "hsl(173 80% 40% / 0.08)" : undefined }}
+                  style={{ height: rowHeight, backgroundColor: inRange ? "hsl(173 80% 40% / 0.08)" : undefined }}
                 >
                   <button
                     type="button"
@@ -227,7 +240,7 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                   className="flex items-center px-2 text-muted-foreground/40"
                   style={{
                     gridColumn: `2 / span ${META_COLUMNS.length + voices.length}`,
-                    height: ROW_HEIGHT,
+                    height: rowHeight,
                     backgroundColor: inRange ? "hsl(173 80% 40% / 0.08)" : undefined,
                   }}
                 >
@@ -267,7 +280,7 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                 className={`flex items-center px-2 text-muted-foreground/70 ${borderClass} ${
                   collapseKeyForRow ? "cursor-pointer hover:bg-secondary/40 hover:text-foreground" : "cursor-row-resize"
                 }`}
-                style={{ height: ROW_HEIGHT, backgroundColor: rangeBg }}
+                style={{ height: rowHeight, backgroundColor: rangeBg }}
               >
                 {formatRowLabel(row.bar, row.beat)}
               </div>
@@ -276,7 +289,7 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                   className={`flex items-center justify-center text-muted-foreground/40 ${borderClass}`}
                   style={{
                     gridColumn: `2 / span ${META_COLUMNS.length + voices.length}`,
-                    height: ROW_HEIGHT,
+                    height: rowHeight,
                     backgroundColor: rangeBg,
                   }}
                   onClick={clearSelection}
@@ -287,21 +300,21 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                 <>
                   <div
                     className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`}
-                    style={{ height: ROW_HEIGHT, backgroundColor: rangeBg }}
+                    style={{ height: rowHeight, backgroundColor: rangeBg }}
                     onClick={clearSelection}
                   >
                     {formatStrCell(row)}
                   </div>
                   <div
                     className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`}
-                    style={{ height: ROW_HEIGHT, backgroundColor: rangeBg }}
+                    style={{ height: rowHeight, backgroundColor: rangeBg }}
                     onClick={clearSelection}
                   >
                     {formatHarCell(row)}
                   </div>
                   <div
                     className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`}
-                    style={{ height: ROW_HEIGHT, backgroundColor: rangeBg }}
+                    style={{ height: rowHeight, backgroundColor: rangeBg }}
                     onClick={clearSelection}
                   >
                     {formatSusCell(row)}
@@ -322,7 +335,7 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                         key={`cell-${row.bar}-${row.beat}-${v}`}
                         className={`flex items-center px-2 ${borderClass}`}
                         style={{
-                          height: ROW_HEIGHT,
+                          height: rowHeight,
                           color: isActive ? voiceColor(v) : "hsl(240 5% 35%)",
                           background: bg,
                         }}
