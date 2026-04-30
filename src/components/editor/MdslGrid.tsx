@@ -218,7 +218,6 @@ const MdslGrid = ({
   return (
     <div
       ref={wrapperRef}
-      data-playhead={playhead ? `${playhead.bar}:${playhead.rowIndex}` : "none"}
       className="relative h-full w-full overflow-auto bg-background font-mono text-xs text-foreground"
       onWheel={onWheel}
       onClick={(e) => {
