@@ -22,6 +22,8 @@ interface MdslGridProps {
    * any audio loads).
    */
   playhead?: { bar: number; rowIndex: number };
+  /** Click on a row gutter emits seek-to-beat. Drag still emits a range. */
+  onSeek?: (beat: number) => void;
 }
 
 const META_COLUMNS = ["STR", "HAR", "SUS"] as const;
@@ -37,6 +39,7 @@ const MdslGrid = ({
   selection,
   onSelectionChange,
   playhead,
+  onSeek,
 }: MdslGridProps) => {
   const voices = score.header.voices;
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -82,13 +85,42 @@ const MdslGrid = ({
     if (selection.kind !== "none") onSelectionChange({ kind: "none" });
   };
 
-  const onGutterMouseDown = (e: React.MouseEvent<HTMLDivElement>, bar: number) => {
+  // Cumulative beat offset to the start of each bar (for converting (bar, rowIndex)
+  // → absolute beat for click-to-seek).
+  const barStartBeats = useMemo(() => {
+    const out = new Map<number, number>();
+    let cum = 0;
+    for (const b of score.bars) {
+      out.set(b.index, cum);
+      cum += b.timeSignature.numerator;
+    }
+    return out;
+  }, [score]);
+
+  const seekBeatFor = (bar: number, rowIndexInBar: number): number => {
+    const b = score.bars.find((x) => x.index === bar);
+    if (!b) return 0;
+    const rowsPerBeat = b.resolution / b.timeSignature.numerator;
+    return (barStartBeats.get(bar) ?? 0) + rowIndexInBar / rowsPerBeat;
+  };
+
+  const onGutterMouseDown = (
+    e: React.MouseEvent<HTMLDivElement>,
+    bar: number,
+    seekBeat: number,
+  ) => {
     e.preventDefault();
     e.stopPropagation();
+    const startClientX = e.clientX;
+    const startClientY = e.clientY;
+    let liveClientX = startClientX;
+    let liveClientY = startClientY;
     let liveDrag = { startBar: bar, endBar: bar };
     setDrag(liveDrag);
 
     const onMove = (ev: MouseEvent) => {
+      liveClientX = ev.clientX;
+      liveClientY = ev.clientY;
       const el = document.elementFromPoint(ev.clientX, ev.clientY);
       if (!el) return;
       const target = el.closest<HTMLElement>("[data-bar]");
@@ -101,12 +133,20 @@ const MdslGrid = ({
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+      setDrag(null);
+      const dragPx = Math.hypot(
+        liveClientX - startClientX,
+        liveClientY - startClientY,
+      );
+      if (dragPx < 4) {
+        onSeek?.(seekBeat);
+        return;
+      }
       const lo = Math.min(liveDrag.startBar, liveDrag.endBar);
       const hi = Math.max(liveDrag.startBar, liveDrag.endBar);
       const next: Selection = selectedVoice
         ? { kind: "range", voice: selectedVoice, startBar: lo, endBar: hi }
         : { kind: "range", startBar: lo, endBar: hi };
-      setDrag(null);
       onSelectionChange(next);
     };
     window.addEventListener("mousemove", onMove);
@@ -239,7 +279,7 @@ const MdslGrid = ({
               <div key={`collapsed-${key}`} className="contents">
                 <div
                   data-bar={d.bar}
-                  onMouseDown={(e) => onGutterMouseDown(e, d.bar)}
+                  onMouseDown={(e) => onGutterMouseDown(e, d.bar, seekBeatFor(d.bar, d.startIdx))}
                   className="flex items-center"
                   style={{
                     height: rowHeight,
@@ -297,7 +337,7 @@ const MdslGrid = ({
             <div key={`row-${row.bar}-${row.beat}`} className="contents">
               <div
                 data-bar={row.bar}
-                onMouseDown={(e) => onGutterMouseDown(e, row.bar)}
+                onMouseDown={(e) => onGutterMouseDown(e, row.bar, seekBeatFor(row.bar, d.rowIndexInBar))}
                 onClick={(e) => {
                   if (collapseKeyForRow) {
                     e.stopPropagation();

@@ -155,6 +155,13 @@ const Workspace = () => {
     .toString()
     .padStart(3, "0")}`;
 
+  const onSeek = (beat: number) => {
+    const t = transportRef.current;
+    if (!t) return;
+    const clamped = Math.max(0, Math.min(beat, totalBars * beatsPerBar));
+    t.seek(clamped);
+  };
+
   // Map playhead to an MdslGrid row location: 0-based row index inside the
   // current bar. Resolution comes from the corresponding bar so mid-piece
   // <RESOLUTION:N> overrides will Just Work once we tighten that path.
@@ -209,6 +216,7 @@ const Workspace = () => {
                   playhead={clampedBeat}
                   selection={selection}
                   onSelectionChange={setSelection}
+                  onSeek={onSeek}
                 />
               ) : (
                 <MdslGrid
@@ -216,6 +224,7 @@ const Workspace = () => {
                   selection={selection}
                   onSelectionChange={setSelection}
                   playhead={gridPlayhead}
+                  onSeek={onSeek}
                 />
               )
             ) : (

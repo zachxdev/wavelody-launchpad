@@ -21,6 +21,8 @@ interface PianoRollProps {
   playhead: number;
   selection: Selection;
   onSelectionChange: (next: Selection) => void;
+  /** Click on the time ruler emits seek-to-beat. Drag still emits a range. */
+  onSeek?: (beat: number) => void;
 }
 
 // Sub-row onset offsets shift the start within a row's time. Convert to beats.
@@ -42,7 +44,13 @@ interface VoiceLane {
   events: NoteEvent[];
 }
 
-const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollProps) => {
+const PianoRoll = ({
+  score,
+  playhead,
+  selection,
+  onSelectionChange,
+  onSeek,
+}: PianoRollProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<{ startBar: number; endBar: number } | null>(null);
@@ -139,15 +147,18 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
-    const xToBar = (clientX: number): number => {
-      // Subtract pan so the bar is computed against the AST x, not the rendered x.
+    const xToBeat = (clientX: number): number => {
+      // Subtract pan so the beat is computed against the AST x, not the rendered x.
       const x = clientX - rect.left - LANE_PITCH_RULER_WIDTH - panX;
-      return beatToBarIndex(x / pxPerBeat);
+      return Math.max(0, x / pxPerBeat);
     };
+    const xToBar = (clientX: number): number => beatToBarIndex(xToBeat(clientX));
     // Track the live drag in a closure-local variable so onUp can read the
     // final state without going through setDrag's updater (which must be
     // pure — setState on a different component from inside an updater
     // triggers React's "update during render" warning).
+    const startClientX = e.clientX;
+    let liveClientX = e.clientX;
     let liveDrag: { startBar: number; endBar: number } = {
       startBar: xToBar(e.clientX),
       endBar: xToBar(e.clientX),
@@ -155,18 +166,25 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
     setDrag(liveDrag);
 
     const onMove = (ev: MouseEvent) => {
+      liveClientX = ev.clientX;
       liveDrag = { ...liveDrag, endBar: xToBar(ev.clientX) };
       setDrag(liveDrag);
     };
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+      setDrag(null);
+      // Click-vs-drag threshold: < 4px movement is a click (seek).
+      const dragPx = Math.abs(liveClientX - startClientX);
+      if (dragPx < 4) {
+        onSeek?.(xToBeat(startClientX));
+        return;
+      }
       const lo = Math.min(liveDrag.startBar, liveDrag.endBar);
       const hi = Math.max(liveDrag.startBar, liveDrag.endBar);
       const next: Selection = selectedVoice
         ? { kind: "range", voice: selectedVoice, startBar: lo, endBar: hi }
         : { kind: "range", startBar: lo, endBar: hi };
-      setDrag(null);
       onSelectionChange(next);
     };
     window.addEventListener("mousemove", onMove);
