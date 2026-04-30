@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Score } from "@/lib/musicdsl";
 import { voiceColor } from "./colors";
-import { collapseBar, type DisplayRow } from "./grid-collapse";
+import { collapseBar, collapseKey, type DisplayRow } from "./grid-collapse";
 import {
   formatHarCell,
   formatRowLabel,
@@ -29,14 +29,60 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
   void onSelectionChange;
   const voices = score.header.voices;
 
+  const [expandedRuns, setExpandedRuns] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+
+  const toggleRun = (key: string) => {
+    setExpandedRuns((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // For expanded runs, clicking the BAR.BEAT label of any of the run's dot rows
+  // re-collapses. We pre-compute the set of (bar, rowIdxInBar) tuples that
+  // belong to currently-expanded runs and the run-key they belong to so the
+  // gutter knows what to toggle off.
+  const expandedRowKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const bar of score.bars) {
+      const dotIdxs: number[] = [];
+      const flush = () => {
+        if (dotIdxs.length >= 4) {
+          const key = collapseKey(bar.index, dotIdxs[0]);
+          if (expandedRuns.has(key)) {
+            for (const idx of dotIdxs) {
+              map.set(`${bar.index}:${idx}`, key);
+            }
+          }
+        }
+        dotIdxs.length = 0;
+      };
+      for (let i = 0; i < bar.rows.length; i += 1) {
+        const row = bar.rows[i];
+        const isDot =
+          !row.structure &&
+          !row.harmony &&
+          row.sustain.length === 0 &&
+          voices.every((v) => row.voices.get(v)?.silent);
+        if (isDot) dotIdxs.push(i);
+        else flush();
+      }
+      flush();
+    }
+    return map;
+  }, [score, voices, expandedRuns]);
+
   const displayRows: DisplayRow[] = useMemo(() => {
     const out: DisplayRow[] = [];
-    const expanded = new Set<string>(); // none expanded yet — Phase 5 step 5
     for (const bar of score.bars) {
-      out.push(...collapseBar(bar, voices, expanded));
+      out.push(...collapseBar(bar, voices, expandedRuns));
     }
     return out;
-  }, [score, voices]);
+  }, [score, voices, expandedRuns]);
 
   const totalColumns = 1 /* gutter */ + META_COLUMNS.length + voices.length;
   const gridTemplate =
@@ -84,19 +130,20 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
         {/* Body rows */}
         {displayRows.map((d, idx) => {
           if (d.kind === "collapsed") {
+            const key = collapseKey(d.bar, d.startIdx);
             return (
-              <div
-                key={`collapsed-${d.bar}-${d.startIdx}`}
-                className="contents"
-              >
-                <div
-                  className="flex items-center px-2 text-muted-foreground/60"
+              <div key={`collapsed-${key}`} className="contents">
+                <button
+                  type="button"
+                  onClick={() => toggleRun(key)}
+                  title={`Expand ${d.count} dot rows`}
+                  className="flex items-center px-2 text-left text-muted-foreground/60 transition-colors hover:bg-secondary/40 hover:text-foreground"
                   style={{ height: ROW_HEIGHT }}
                 >
                   {d.count}R{d.endsBar ? " |" : ""}
-                </div>
+                </button>
                 <div
-                  className="flex items-center px-2 text-center text-muted-foreground/40"
+                  className="flex items-center px-2 text-muted-foreground/40"
                   style={{
                     gridColumn: `2 / span ${META_COLUMNS.length + voices.length}`,
                     height: ROW_HEIGHT,
@@ -118,10 +165,20 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
             ? "border-t-2 border-border/80"
             : "border-t border-border/30";
           const dot = isDotRow(row, voices);
+          const collapseKeyForRow = expandedRowKey.get(
+            `${row.bar}:${d.rowIndexInBar}`,
+          );
+          const labelClick = collapseKeyForRow
+            ? () => toggleRun(collapseKeyForRow)
+            : undefined;
           return (
             <div key={`row-${row.bar}-${row.beat}`} className="contents">
               <div
-                className={`flex items-center px-2 text-muted-foreground/70 ${borderClass}`}
+                onClick={labelClick}
+                title={collapseKeyForRow ? "Click to re-collapse this run" : undefined}
+                className={`flex items-center px-2 text-muted-foreground/70 ${borderClass} ${
+                  collapseKeyForRow ? "cursor-pointer hover:bg-secondary/40 hover:text-foreground" : ""
+                }`}
                 style={{ height: ROW_HEIGHT }}
               >
                 {formatRowLabel(row.bar, row.beat)}
