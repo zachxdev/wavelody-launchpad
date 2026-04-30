@@ -1,4 +1,5 @@
 import { Slider } from "@/components/ui/slider";
+import { voiceColor } from "@/components/editor/colors";
 import { cn } from "@/lib/utils";
 
 export interface MixerChannel {
@@ -18,7 +19,14 @@ const MixerRow = ({ channel, onChange }: MixerRowProps) => {
   return (
     <div className="space-y-2 px-3 py-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-foreground">{channel.name}</span>
+        <span className="flex items-center gap-2 text-xs text-foreground">
+          <span
+            aria-hidden="true"
+            className="h-2 w-2 shrink-0 rounded-sm"
+            style={{ backgroundColor: voiceColor(channel.name) }}
+          />
+          {channel.name}
+        </span>
         <div className="flex items-center gap-1">
           <button
             type="button"
