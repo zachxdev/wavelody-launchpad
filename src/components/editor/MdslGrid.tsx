@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Score } from "@/lib/musicdsl";
 import { voiceColor } from "./colors";
 import { collapseBar, collapseKey, type DisplayRow } from "./grid-collapse";
@@ -25,9 +25,70 @@ const META_COL_WIDTH = 96;
 const VOICE_COL_WIDTH = 168; // sized to fit (Db4,F4,Ab4:mf:192) + a little.
 
 const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
-  void selection;
-  void onSelectionChange;
   const voices = score.header.voices;
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [drag, setDrag] = useState<{ startBar: number; endBar: number } | null>(null);
+
+  const selectedVoice =
+    selection.kind === "voice" || selection.kind === "range"
+      ? selection.voice
+      : undefined;
+
+  const range =
+    drag !== null
+      ? {
+          startBar: Math.min(drag.startBar, drag.endBar),
+          endBar: Math.max(drag.startBar, drag.endBar),
+        }
+      : selection.kind === "range"
+        ? { startBar: selection.startBar, endBar: selection.endBar }
+        : null;
+
+  const isBarInRange = (bar: number) =>
+    range !== null && bar >= range.startBar && bar <= range.endBar;
+
+  const toggleVoice = (voice: string) => {
+    if (selectedVoice === voice && selection.kind === "voice") {
+      onSelectionChange({ kind: "none" });
+    } else {
+      onSelectionChange({ kind: "voice", voice });
+    }
+  };
+
+  const clearSelection = () => {
+    if (selection.kind !== "none") onSelectionChange({ kind: "none" });
+  };
+
+  const onGutterMouseDown = (e: React.MouseEvent<HTMLDivElement>, bar: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let liveDrag = { startBar: bar, endBar: bar };
+    setDrag(liveDrag);
+
+    const onMove = (ev: MouseEvent) => {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      if (!el) return;
+      const target = el.closest<HTMLElement>("[data-bar]");
+      if (!target) return;
+      const b = parseInt(target.dataset.bar ?? "", 10);
+      if (!Number.isFinite(b)) return;
+      liveDrag = { ...liveDrag, endBar: b };
+      setDrag(liveDrag);
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      const lo = Math.min(liveDrag.startBar, liveDrag.endBar);
+      const hi = Math.max(liveDrag.startBar, liveDrag.endBar);
+      const next: Selection = selectedVoice
+        ? { kind: "range", voice: selectedVoice, startBar: lo, endBar: hi }
+        : { kind: "range", startBar: lo, endBar: hi };
+      setDrag(null);
+      onSelectionChange(next);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
 
   const [expandedRuns, setExpandedRuns] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -92,7 +153,13 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
     voices.map(() => `${VOICE_COL_WIDTH}px`).join(" ");
 
   return (
-    <div className="relative h-full w-full overflow-auto bg-background font-mono text-xs text-foreground">
+    <div
+      ref={wrapperRef}
+      className="relative h-full w-full overflow-auto bg-background font-mono text-xs text-foreground"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) clearSelection();
+      }}
+    >
       <div
         className="grid"
         style={{ gridTemplateColumns: gridTemplate, minWidth: "max-content" }}
@@ -117,13 +184,17 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
             </div>
           ))}
           {voices.map((v) => (
-            <div
+            <button
               key={`voice-h-${v}`}
-              className="px-2 py-1 text-[11px] font-medium"
+              type="button"
+              onClick={() => toggleVoice(v)}
+              className={`px-2 py-1 text-left text-[11px] font-medium transition-colors ${
+                selectedVoice === v ? "bg-secondary/40" : "hover:bg-secondary/20"
+              }`}
               style={{ color: voiceColor(v) }}
             >
               {v}
-            </div>
+            </button>
           ))}
         </div>
 
@@ -131,22 +202,33 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
         {displayRows.map((d, idx) => {
           if (d.kind === "collapsed") {
             const key = collapseKey(d.bar, d.startIdx);
+            const inRange = isBarInRange(d.bar);
             return (
               <div key={`collapsed-${key}`} className="contents">
-                <button
-                  type="button"
-                  onClick={() => toggleRun(key)}
-                  title={`Expand ${d.count} dot rows`}
-                  className="flex items-center px-2 text-left text-muted-foreground/60 transition-colors hover:bg-secondary/40 hover:text-foreground"
-                  style={{ height: ROW_HEIGHT }}
+                <div
+                  data-bar={d.bar}
+                  onMouseDown={(e) => onGutterMouseDown(e, d.bar)}
+                  className="flex items-center"
+                  style={{ height: ROW_HEIGHT, backgroundColor: inRange ? "hsl(173 80% 40% / 0.08)" : undefined }}
                 >
-                  {d.count}R{d.endsBar ? " |" : ""}
-                </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleRun(key);
+                    }}
+                    title={`Expand ${d.count} dot rows`}
+                    className="h-full w-full px-2 text-left text-muted-foreground/60 transition-colors hover:bg-secondary/40 hover:text-foreground"
+                  >
+                    {d.count}R{d.endsBar ? " |" : ""}
+                  </button>
+                </div>
                 <div
                   className="flex items-center px-2 text-muted-foreground/40"
                   style={{
                     gridColumn: `2 / span ${META_COLUMNS.length + voices.length}`,
                     height: ROW_HEIGHT,
+                    backgroundColor: inRange ? "hsl(173 80% 40% / 0.08)" : undefined,
                   }}
                 >
                   ·
@@ -168,18 +250,24 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
           const collapseKeyForRow = expandedRowKey.get(
             `${row.bar}:${d.rowIndexInBar}`,
           );
-          const labelClick = collapseKeyForRow
-            ? () => toggleRun(collapseKeyForRow)
-            : undefined;
+          const inRange = isBarInRange(row.bar);
+          const rangeBg = inRange ? "hsl(173 80% 40% / 0.08)" : undefined;
           return (
             <div key={`row-${row.bar}-${row.beat}`} className="contents">
               <div
-                onClick={labelClick}
+                data-bar={row.bar}
+                onMouseDown={(e) => onGutterMouseDown(e, row.bar)}
+                onClick={(e) => {
+                  if (collapseKeyForRow) {
+                    e.stopPropagation();
+                    toggleRun(collapseKeyForRow);
+                  }
+                }}
                 title={collapseKeyForRow ? "Click to re-collapse this run" : undefined}
                 className={`flex items-center px-2 text-muted-foreground/70 ${borderClass} ${
-                  collapseKeyForRow ? "cursor-pointer hover:bg-secondary/40 hover:text-foreground" : ""
+                  collapseKeyForRow ? "cursor-pointer hover:bg-secondary/40 hover:text-foreground" : "cursor-row-resize"
                 }`}
-                style={{ height: ROW_HEIGHT }}
+                style={{ height: ROW_HEIGHT, backgroundColor: rangeBg }}
               >
                 {formatRowLabel(row.bar, row.beat)}
               </div>
@@ -189,24 +277,46 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                   style={{
                     gridColumn: `2 / span ${META_COLUMNS.length + voices.length}`,
                     height: ROW_HEIGHT,
+                    backgroundColor: rangeBg,
                   }}
+                  onClick={clearSelection}
                 >
                   ·
                 </div>
               ) : (
                 <>
-                  <div className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`} style={{ height: ROW_HEIGHT }}>
+                  <div
+                    className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`}
+                    style={{ height: ROW_HEIGHT, backgroundColor: rangeBg }}
+                    onClick={clearSelection}
+                  >
                     {formatStrCell(row)}
                   </div>
-                  <div className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`} style={{ height: ROW_HEIGHT }}>
+                  <div
+                    className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`}
+                    style={{ height: ROW_HEIGHT, backgroundColor: rangeBg }}
+                    onClick={clearSelection}
+                  >
                     {formatHarCell(row)}
                   </div>
-                  <div className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`} style={{ height: ROW_HEIGHT }}>
+                  <div
+                    className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`}
+                    style={{ height: ROW_HEIGHT, backgroundColor: rangeBg }}
+                    onClick={clearSelection}
+                  >
                     {formatSusCell(row)}
                   </div>
                   {voices.map((v) => {
                     const text = formatVoiceCell(row, v);
                     const isActive = text !== "-";
+                    const colSelected = selectedVoice === v;
+                    // Layer voice-column tint over bar-range tint when both apply.
+                    const bg =
+                      colSelected && inRange
+                        ? `linear-gradient(${voiceColor(v).replace("hsl(", "hsla(").replace(")", " / 0.10)")}, ${voiceColor(v).replace("hsl(", "hsla(").replace(")", " / 0.10)")}), hsl(173 80% 40% / 0.08)`
+                        : colSelected
+                          ? voiceColor(v).replace("hsl(", "hsla(").replace(")", " / 0.10)")
+                          : rangeBg;
                     return (
                       <div
                         key={`cell-${row.bar}-${row.beat}-${v}`}
@@ -214,7 +324,9 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
                         style={{
                           height: ROW_HEIGHT,
                           color: isActive ? voiceColor(v) : "hsl(240 5% 35%)",
+                          background: bg,
                         }}
+                        onClick={clearSelection}
                       >
                         {text}
                       </div>
