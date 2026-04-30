@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Score } from "@/lib/musicdsl";
+import type { NoteEvent, Score } from "@/lib/musicdsl";
 import { extractVoices } from "@/lib/musicdsl";
 import { voiceColor } from "./colors";
 import {
@@ -8,6 +8,7 @@ import {
   LANE_PITCH_RULER_WIDTH,
   PX_PER_SEMITONE,
   RULER_HEIGHT,
+  dynamicToOpacity,
   laneHeight,
   voiceLaneRange,
 } from "./piano-roll-layout";
@@ -20,11 +21,23 @@ interface PianoRollProps {
   onSelectionChange: (next: Selection) => void;
 }
 
+// Sub-row onset offsets shift the start within a row's time. Convert to beats.
+// Phase 4: render at the offset onset for accuracy; no visual indicator that
+// the note is offset.
+function computeOffsetBeats(event: NoteEvent, rowsPerBeat: number): number {
+  const off = event.note.offset;
+  if (!off) return 0;
+  const rowFraction = off.fraction.num / off.fraction.den;
+  const sign = off.mode === "backward" ? -1 : 1;
+  return (sign * rowFraction) / rowsPerBeat;
+}
+
 interface VoiceLane {
   voice: string;
   range: { minMidi: number; maxMidi: number };
   height: number;
   yTop: number;
+  events: NoteEvent[];
 }
 
 const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollProps) => {
@@ -49,7 +62,13 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
     for (const stream of streams) {
       const range = voiceLaneRange(stream.events.map((e) => e.note));
       const h = laneHeight(range);
-      out.push({ voice: stream.voice, range, height: h, yTop: yCursor });
+      out.push({
+        voice: stream.voice,
+        range,
+        height: h,
+        yTop: yCursor,
+        events: stream.events,
+      });
       yCursor += h + LANE_GAP;
     }
     return out;
@@ -228,6 +247,36 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
                   strokeWidth={1}
                 />
               );
+            })}
+            {/* Notes */}
+            {lane.events.flatMap((event) => {
+              const onsetBeat =
+                event.absolutePosition / rowsPerBeat +
+                computeOffsetBeats(event, rowsPerBeat);
+              const widthBeats = event.note.durationUnits / rowsPerBeat;
+              const x = LANE_PITCH_RULER_WIDTH + onsetBeat * pxPerBeat;
+              const w = widthBeats * pxPerBeat;
+              const fill = voiceColor(lane.voice);
+              const opacity = dynamicToOpacity(event.note.dynamic);
+              return event.note.pitches.map((pitch, pi) => {
+                const y =
+                  lane.yTop + (lane.range.maxMidi - pitch.midi) * PX_PER_SEMITONE;
+                return (
+                  <rect
+                    key={`note-${lane.voice}-${event.absolutePosition}-${pi}-${pitch.midi}`}
+                    x={x}
+                    y={y}
+                    width={Math.max(2, w)}
+                    height={PX_PER_SEMITONE}
+                    rx={1}
+                    fill={fill}
+                    fillOpacity={opacity}
+                    stroke={fill}
+                    strokeOpacity={0.85}
+                    strokeWidth={0.5}
+                  />
+                );
+              });
             })}
           </g>
         ))}
