@@ -1,0 +1,36 @@
+# Cloudflare Workers config for the Wavelody auth + rate-limit backend.
+#
+# All endpoints live under /api/*. The Worker is mounted at wavelody.com/api/*
+# at deploy time (Phase 9 owns deploy — do not deploy from this config alone).
+#
+# To run locally:
+#   npx wrangler dev
+#
+# Required local env (for the CLI scripts only, not bound at runtime):
+#   CF_ACCOUNT_ID, CF_API_TOKEN, KV_NAMESPACE_ID
+#
+# Required runtime bindings (set via `wrangler secret put` for the secret,
+# and via the Cloudflare dashboard for the KV namespace id):
+#   WAVELODY_JWT_SECRET  — 256-bit secret used to sign HS256 JWTs
+#   WAVELODY_CODES       — KV namespace holding code: / session: / killswitch: keys
+
+name = "wavelody-api"
+main = "api/index.ts"
+compatibility_date = "2024-09-23"
+workers_dev = false
+
+[[kv_namespaces]]
+binding = "WAVELODY_CODES"
+# Replace with the id printed by `wrangler kv:namespace create wavelody-codes`
+# at deploy time. Leaving the placeholder here so `wrangler dev` errors
+# loudly if anyone tries to run it without provisioning the namespace first.
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+# Public, non-secret config goes here. Secrets (WAVELODY_JWT_SECRET) live in
+# the encrypted store via `wrangler secret put`.
+
+# Routes are configured at deploy time; uncomment and adjust before Phase 9.
+# [[routes]]
+# pattern = "wavelody.com/api/*"
+# zone_name = "wavelody.com"
