@@ -11,12 +11,12 @@ import {
 
 const FIXED_LEADING_COLUMNS = ["BAR", "BEAT", "STR", "HAR", "SUS"];
 
-function serializePitch(p: Pitch): string {
+export function serializePitch(p: Pitch): string {
   const acc = p.alter === 1 ? "#" : p.alter === -1 ? "b" : "";
   return `${p.step}${acc}${p.octave}`;
 }
 
-function serializeNote(n: Note): string {
+export function serializeNote(n: Note): string {
   const pitches = n.pitches.map(serializePitch).join(",");
   const dur = `${n.durationUnits}${n.sustain ? "s" : ""}${
     n.articulation ? `.${n.articulation}` : ""
@@ -30,7 +30,7 @@ function serializeNote(n: Note): string {
   return out;
 }
 
-function serializeCurve(c: ControlCurveToken): string {
+export function serializeCurve(c: ControlCurveToken): string {
   const letter = c.releases ? c.dim.toLowerCase() : c.dim;
   const tagPart = c.scope === "master" ? "" : `#${c.scope}`;
   if (c.value === null) return `${letter}${tagPart}`;
@@ -40,7 +40,7 @@ function serializeCurve(c: ControlCurveToken): string {
   return `${letter}${numStr}`;
 }
 
-function serializeVoiceCell(cell: VoiceCell): string {
+export function serializeVoiceCell(cell: VoiceCell): string {
   if (cell.silent && cell.notes.length === 0 && cell.curves.length === 0 && !cell.rest) {
     return "-";
   }
@@ -50,14 +50,14 @@ function serializeVoiceCell(cell: VoiceCell): string {
   return [...cell.notes.map(serializeNote), ...cell.curves.map(serializeCurve)].join("");
 }
 
-function serializeSusCell(notes: SusNote[]): string {
+export function serializeSusCell(notes: SusNote[]): string {
   if (notes.length === 0) return "-";
   return notes
     .map((n) => `(${n.pitches.map(serializePitch).join(",")}:${n.dynamic})`)
     .join("");
 }
 
-function isRowEmpty(row: BeatRow, voiceOrder: string[]): boolean {
+export function isRowEmpty(row: BeatRow, voiceOrder: string[]): boolean {
   if (row.structure || row.harmony) return false;
   if (row.sustain.length > 0) return false;
   for (const v of voiceOrder) {
