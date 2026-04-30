@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TopBar from "@/components/shell/TopBar";
 import PassesPane from "@/components/shell/PassesPane";
@@ -11,6 +11,7 @@ import PianoRoll from "@/components/editor/PianoRoll";
 import MdslGrid from "@/components/editor/MdslGrid";
 import { NO_SELECTION, type Selection } from "@/components/editor/selection";
 import { parse, type Score } from "@/lib/musicdsl";
+import { Transport, synthesizeStemsForScore } from "@/lib/audio";
 
 const FIXTURE_URL = "/fixtures/piano_trio.mdsl";
 
@@ -51,7 +52,8 @@ const Workspace = () => {
 
   const [score, setScore] = useState<Score | null>(null);
   const [selection, setSelection] = useState<Selection>(NO_SELECTION);
-  const [playhead] = useState(0);
+  const [currentBeat, setCurrentBeat] = useState(0);
+  const transportRef = useRef<Transport | null>(null);
 
   useEffect(() => {
     const session = sessionStorage.getItem("wavelody-session");
@@ -79,11 +81,58 @@ const Workspace = () => {
     };
   }, [authChecked]);
 
+  // Build a Transport per loaded score; tear it down on unload / score swap.
+  useEffect(() => {
+    if (!score) return;
+    const transport = new Transport();
+    const beatsPerBar = score.header.timeSignature.numerator;
+    transport.configure({
+      bpm: score.header.tempo,
+      beatsPerBar,
+      totalBeats: score.bars.length * beatsPerBar,
+    });
+    transportRef.current = transport;
+
+    const offTick = transport.on("beat-tick", setCurrentBeat);
+    const offPlay = transport.on("play", () => setIsPlaying(true));
+    const offPause = transport.on("pause", () => setIsPlaying(false));
+    const offStop = transport.on("stop", () => {
+      setIsPlaying(false);
+      setCurrentBeat(0);
+    });
+
+    // Synthesize placeholder stems and load into the transport.
+    // Real WAV stems via loader.ts will land here in Phase 8.
+    synthesizeStemsForScore(score)
+      .then((stems) => transport.load(stems))
+      .catch((e: unknown) => {
+        console.error("Failed to synthesize stems", e);
+      });
+
+    return () => {
+      offTick();
+      offPlay();
+      offPause();
+      offStop();
+      transport.dispose();
+      transportRef.current = null;
+    };
+  }, [score]);
+
   if (!authChecked) return null;
 
   const handleChannelChange = (index: number, next: MixerChannel) => {
     setChannels((prev) => prev.map((c, i) => (i === index ? next : c)));
   };
+
+  const onTogglePlay = () => {
+    const t = transportRef.current;
+    if (!t) return;
+    if (t.isPlaying()) t.pause();
+    else void t.start();
+  };
+
+  const onStop = () => transportRef.current?.stop();
 
   const projectName = score?.header.title ?? "Loading…";
   const tempo = score?.header.tempo ?? 120;
@@ -91,6 +140,15 @@ const Workspace = () => {
   const timeSig = score
     ? `${score.header.timeSignature.numerator}/${score.header.timeSignature.denominator}`
     : "—";
+  const beatsPerBar = score?.header.timeSignature.numerator ?? 4;
+  const totalBars = score?.bars.length ?? 1;
+  const currentBar = Math.floor(currentBeat / beatsPerBar) + 1;
+  const beatInBar = currentBeat - (currentBar - 1) * beatsPerBar + 1;
+  const beatInt = Math.floor(beatInBar);
+  const beatFrac = Math.max(0, beatInBar - beatInt);
+  const positionStr = `${currentBar}:${beatInt}.${Math.floor(beatFrac * 1000)
+    .toString()
+    .padStart(3, "0")}`;
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
@@ -116,18 +174,18 @@ const Workspace = () => {
             view={view}
             onViewChange={setView}
             isPlaying={isPlaying}
-            onTogglePlay={() => setIsPlaying((p) => !p)}
-            onStop={() => setIsPlaying(false)}
-            position="1:1.000"
-            bar={1}
-            totalBars={8}
+            onTogglePlay={onTogglePlay}
+            onStop={onStop}
+            position={positionStr}
+            bar={currentBar}
+            totalBars={totalBars}
           />
           <div className="relative flex-1 min-h-0">
             {score ? (
               view === "piano-roll" ? (
                 <PianoRoll
                   score={score}
-                  playhead={playhead}
+                  playhead={currentBeat}
                   selection={selection}
                   onSelectionChange={setSelection}
                 />
