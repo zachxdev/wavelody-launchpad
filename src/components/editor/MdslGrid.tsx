@@ -2,7 +2,14 @@ import { useMemo } from "react";
 import type { Score } from "@/lib/musicdsl";
 import { voiceColor } from "./colors";
 import { collapseBar, type DisplayRow } from "./grid-collapse";
-import { formatRowLabel } from "./grid-format";
+import {
+  formatHarCell,
+  formatRowLabel,
+  formatStrCell,
+  formatSusCell,
+  formatVoiceCell,
+  isDotRow,
+} from "./grid-format";
 import type { Selection } from "./selection";
 
 interface MdslGridProps {
@@ -101,36 +108,63 @@ const MdslGrid = ({ score, selection, onSelectionChange }: MdslGridProps) => {
             );
           }
           const row = d.row;
-          const isFirstOfBar = idx === 0 || displayRows[idx - 1] === undefined
-            ? true
-            : (() => {
-                const prev = displayRows[idx - 1];
-                if (prev.kind === "row") return prev.row.bar !== row.bar;
-                return prev.bar !== row.bar;
-              })();
+          const isFirstOfBar = (() => {
+            if (idx === 0) return true;
+            const prev = displayRows[idx - 1];
+            if (prev.kind === "row") return prev.row.bar !== row.bar;
+            return prev.bar !== row.bar;
+          })();
+          const borderClass = isFirstOfBar
+            ? "border-t-2 border-border/80"
+            : "border-t border-border/30";
+          const dot = isDotRow(row, voices);
           return (
-            <div
-              key={`row-${row.bar}-${row.beat}`}
-              className="contents"
-            >
+            <div key={`row-${row.bar}-${row.beat}`} className="contents">
               <div
-                className={`flex items-center px-2 text-muted-foreground/70 ${
-                  isFirstOfBar ? "border-t-2 border-border/80" : "border-t border-border/30"
-                }`}
+                className={`flex items-center px-2 text-muted-foreground/70 ${borderClass}`}
                 style={{ height: ROW_HEIGHT }}
               >
                 {formatRowLabel(row.bar, row.beat)}
               </div>
-              {/* Empty placeholders — populated in step 4 */}
-              {Array.from({ length: META_COLUMNS.length + voices.length }).map((_, ci) => (
+              {dot ? (
                 <div
-                  key={`cell-${row.bar}-${row.beat}-${ci}`}
-                  className={`flex items-center px-2 ${
-                    isFirstOfBar ? "border-t-2 border-border/80" : "border-t border-border/30"
-                  }`}
-                  style={{ height: ROW_HEIGHT }}
-                />
-              ))}
+                  className={`flex items-center justify-center text-muted-foreground/40 ${borderClass}`}
+                  style={{
+                    gridColumn: `2 / span ${META_COLUMNS.length + voices.length}`,
+                    height: ROW_HEIGHT,
+                  }}
+                >
+                  ·
+                </div>
+              ) : (
+                <>
+                  <div className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`} style={{ height: ROW_HEIGHT }}>
+                    {formatStrCell(row)}
+                  </div>
+                  <div className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`} style={{ height: ROW_HEIGHT }}>
+                    {formatHarCell(row)}
+                  </div>
+                  <div className={`flex items-center px-2 text-muted-foreground/80 ${borderClass}`} style={{ height: ROW_HEIGHT }}>
+                    {formatSusCell(row)}
+                  </div>
+                  {voices.map((v) => {
+                    const text = formatVoiceCell(row, v);
+                    const isActive = text !== "-";
+                    return (
+                      <div
+                        key={`cell-${row.bar}-${row.beat}-${v}`}
+                        className={`flex items-center px-2 ${borderClass}`}
+                        style={{
+                          height: ROW_HEIGHT,
+                          color: isActive ? voiceColor(v) : "hsl(240 5% 35%)",
+                        }}
+                      >
+                        {text}
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </div>
           );
         })}
