@@ -4,6 +4,7 @@
 // re-issues a fresh token on every successful call so the client can keep
 // the 7-day sliding window alive.
 
+import { json } from "./http";
 import { signJwt, verifyJwt } from "./jwt";
 import type { AccessCode, JwtPayload } from "./types";
 import { JWT_TTL_SECONDS, KEY_PREFIX } from "./types";
@@ -171,4 +172,66 @@ export async function releaseInflight(
 
 export function refreshHeader(token: string): Record<string, string> {
   return { "X-Refreshed-Token": token };
+}
+
+export interface WriteGateOptions {
+  kind: QuotaKind;
+  checkKillswitchFlag: boolean;
+  useInflight: boolean;
+}
+
+export interface WriteGatePass {
+  ctx: AuthContext;
+  release: () => Promise<void>;
+}
+
+// Shared write-endpoint gate for /generate, /edit, /render, /critique. Runs
+// auth → optional killswitch check → optional inflight acquire →
+// quota check + increment, in that order. Returns either a Response (the
+// caller should return it untouched) or a pass token carrying the auth
+// context and a release fn the caller must invoke after producing its
+// own Response.
+export async function gateWriteEndpoint(
+  request: Request,
+  env: Env,
+  opts: WriteGateOptions,
+): Promise<Response | WriteGatePass> {
+  let ctx: AuthContext;
+  try {
+    ctx = await authenticate(request, env);
+  } catch (e: unknown) {
+    if (e instanceof AuthError) return json(e.body, e.status);
+    throw e;
+  }
+
+  if (opts.checkKillswitchFlag) {
+    if (await checkKillswitch(env)) {
+      return json(
+        { error: "Demo paused for the day, back tomorrow." },
+        503,
+      );
+    }
+  }
+
+  let release: () => Promise<void> = async () => {};
+  if (opts.useInflight) {
+    const acquired = await acquireInflight(env, ctx.code.code);
+    if (!acquired) {
+      return json(
+        { error: "Generation already in progress for this code." },
+        429,
+      );
+    }
+    release = () => releaseInflight(env, ctx.code.code);
+  }
+
+  try {
+    await checkAndIncrement(env, ctx.code, opts.kind);
+  } catch (e: unknown) {
+    await release();
+    if (e instanceof AuthError) return json(e.body, e.status);
+    throw e;
+  }
+
+  return { ctx, release };
 }
