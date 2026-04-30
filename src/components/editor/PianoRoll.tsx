@@ -6,6 +6,8 @@ import {
   DEFAULT_PX_PER_BEAT,
   LANE_GAP,
   LANE_PITCH_RULER_WIDTH,
+  MAX_PX_PER_BEAT,
+  MIN_PX_PER_BEAT,
   PX_PER_SEMITONE,
   RULER_HEIGHT,
   dynamicToOpacity,
@@ -41,9 +43,11 @@ interface VoiceLane {
 }
 
 const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollProps) => {
-  const pxPerBeat = DEFAULT_PX_PER_BEAT;
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<{ startBar: number; endBar: number } | null>(null);
+  const [pxPerBeat, setPxPerBeat] = useState(DEFAULT_PX_PER_BEAT);
+  const [panX, setPanX] = useState(0);
 
   const selectedVoice =
     selection.kind === "voice" || selection.kind === "range" ? selection.voice : undefined;
@@ -101,8 +105,6 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
     barStartsBeats.push(acc);
     acc += bar.rows.length / rowsPerBeat;
   }
-  const playheadX = LANE_PITCH_RULER_WIDTH + playhead * pxPerBeat;
-
   const beatToBarIndex = (beat: number): number => {
     if (beat < 0) return score.bars[0]?.index ?? 1;
     for (let i = barStartsBeats.length - 1; i >= 0; i -= 1) {
@@ -111,13 +113,35 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
     return score.bars[0]?.index ?? 1;
   };
 
+  const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      // Smaller multiplier so zoom feels controlled (deltaY is typically 100 per notch).
+      const zoomDelta = -e.deltaY * 0.1;
+      setPxPerBeat((prev) =>
+        Math.max(MIN_PX_PER_BEAT, Math.min(MAX_PX_PER_BEAT, prev + zoomDelta)),
+      );
+      return;
+    }
+    const horizontal = e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY);
+    if (horizontal) {
+      e.preventDefault();
+      const dx = e.shiftKey ? e.deltaY : e.deltaX;
+      const viewport = wrapperRef.current?.clientWidth ?? 0;
+      const minPan = Math.min(0, viewport - LANE_PITCH_RULER_WIDTH - contentWidth);
+      setPanX((prev) => Math.max(minPan, Math.min(0, prev - dx)));
+    }
+    // Otherwise: native vertical scroll on the wrapper.
+  };
+
   const onRulerMouseDown = (e: React.MouseEvent<SVGRectElement>) => {
     e.stopPropagation();
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const xToBar = (clientX: number): number => {
-      const x = clientX - rect.left - LANE_PITCH_RULER_WIDTH;
+      // Subtract pan so the bar is computed against the AST x, not the rendered x.
+      const x = clientX - rect.left - LANE_PITCH_RULER_WIDTH - panX;
       return beatToBarIndex(x / pxPerBeat);
     };
     const startBar = xToBar(e.clientX);
@@ -147,37 +171,23 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
   };
 
   return (
-    <div className="relative h-full w-full overflow-auto bg-background">
+    <div
+      ref={wrapperRef}
+      className="relative h-full w-full overflow-y-auto overflow-x-hidden bg-background"
+      onWheel={onWheel}
+    >
       <svg
         ref={svgRef}
-        width={LANE_PITCH_RULER_WIDTH + contentWidth}
+        width="100%"
         height={totalHeight}
         className="block select-none"
-        style={{ minWidth: "100%" }}
         onClick={(e) => {
-          // Background click on the SVG root clears selection unless a child handler stopped it.
           if (e.target === e.currentTarget) clearSelection();
         }}
       >
-        {/* Pitch-ruler column background */}
-        <rect
-          x={0}
-          y={0}
-          width={LANE_PITCH_RULER_WIDTH}
-          height={totalHeight}
-          fill="hsl(240 14% 9%)"
-        />
-        <line
-          x1={LANE_PITCH_RULER_WIDTH}
-          y1={0}
-          x2={LANE_PITCH_RULER_WIDTH}
-          y2={totalHeight}
-          stroke="hsl(240 10% 16%)"
-          strokeWidth={1}
-        />
-
-        {/* Time ruler */}
-        <g>
+        {/* Moving content: time ruler + lane bgs/notes/range/playhead, translated by panX */}
+        <g transform={`translate(${panX}, 0)`}>
+          {/* Time ruler bg + drag target */}
           <rect
             x={LANE_PITCH_RULER_WIDTH}
             y={0}
@@ -219,75 +229,40 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
               </g>
             );
           })}
-        </g>
 
-        {/* Lanes */}
-        {lanes.map((lane) => (
-          <g key={lane.voice}>
-            {/* Lane background — clicking it clears the selection */}
-            <rect
-              x={LANE_PITCH_RULER_WIDTH}
-              y={lane.yTop}
-              width={contentWidth}
-              height={lane.height}
-              fill="hsl(240 18% 7%)"
-              onClick={(e) => {
-                e.stopPropagation();
-                clearSelection();
-              }}
-            />
-            {/* Lane bottom border */}
-            <line
-              x1={0}
-              y1={lane.yTop + lane.height}
-              x2={LANE_PITCH_RULER_WIDTH + contentWidth}
-              y2={lane.yTop + lane.height}
-              stroke="hsl(240 10% 16%)"
-              strokeWidth={1}
-            />
-            {/* Pitch ruler header (lane title + octave labels) — clickable for voice selection */}
-            <rect
-              x={0}
-              y={lane.yTop}
-              width={LANE_PITCH_RULER_WIDTH}
-              height={lane.height}
-              fill={selectedVoice === lane.voice ? "hsl(173 80% 14%)" : "hsl(240 14% 9%)"}
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleVoice(lane.voice);
-              }}
-            />
-            <line
-              x1={4}
-              y1={lane.yTop + 2}
-              x2={4}
-              y2={lane.yTop + lane.height - 2}
-              stroke={voiceColor(lane.voice)}
-              strokeWidth={selectedVoice === lane.voice ? 3 : 2}
-              pointerEvents="none"
-            />
-            <text
-              x={12}
-              y={lane.yTop + 14}
-              fill="hsl(0 0% 96%)"
-              fontSize={11}
-              fontFamily="ui-monospace, monospace"
-              pointerEvents="none"
-            >
-              {lane.voice}
-            </text>
-            {/* Octave gridlines (C-row of every octave) */}
-            {(() => {
-              const ticks: number[] = [];
-              for (let m = lane.range.maxMidi; m >= lane.range.minMidi; m -= 1) {
-                if (m % 12 === 0) ticks.push(m);
-              }
-              return ticks.map((m) => {
-                const y = lane.yTop + (lane.range.maxMidi - m) * PX_PER_SEMITONE;
-                return (
-                  <g key={`oct-${lane.voice}-${m}`}>
+          {/* Per-lane content (excludes the fixed pitch-ruler header strip) */}
+          {lanes.map((lane) => (
+            <g key={`lane-content-${lane.voice}`}>
+              <rect
+                x={LANE_PITCH_RULER_WIDTH}
+                y={lane.yTop}
+                width={contentWidth}
+                height={lane.height}
+                fill="hsl(240 18% 7%)"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearSelection();
+                }}
+              />
+              <line
+                x1={LANE_PITCH_RULER_WIDTH}
+                y1={lane.yTop + lane.height}
+                x2={LANE_PITCH_RULER_WIDTH + contentWidth}
+                y2={lane.yTop + lane.height}
+                stroke="hsl(240 10% 16%)"
+                strokeWidth={1}
+              />
+              {/* Octave gridlines (line only — labels are in the fixed overlay) */}
+              {(() => {
+                const ticks: number[] = [];
+                for (let m = lane.range.maxMidi; m >= lane.range.minMidi; m -= 1) {
+                  if (m % 12 === 0) ticks.push(m);
+                }
+                return ticks.map((m) => {
+                  const y = lane.yTop + (lane.range.maxMidi - m) * PX_PER_SEMITONE;
+                  return (
                     <line
+                      key={`octline-${lane.voice}-${m}`}
                       x1={LANE_PITCH_RULER_WIDTH}
                       y1={y}
                       x2={LANE_PITCH_RULER_WIDTH + contentWidth}
@@ -295,114 +270,184 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
                       stroke="hsl(240 10% 14%)"
                       strokeWidth={1}
                     />
+                  );
+                });
+              })()}
+              {/* Bar lines crossing the lane */}
+              {barStartsBeats.map((b, i) => {
+                const x = LANE_PITCH_RULER_WIDTH + b * pxPerBeat;
+                return (
+                  <line
+                    key={`barline-${lane.voice}-${i}`}
+                    x1={x}
+                    y1={lane.yTop}
+                    x2={x}
+                    y2={lane.yTop + lane.height}
+                    stroke="hsl(240 10% 18%)"
+                    strokeWidth={1}
+                  />
+                );
+              })}
+              {/* Notes */}
+              {lane.events.flatMap((event) => {
+                const onsetBeat =
+                  event.absolutePosition / rowsPerBeat +
+                  computeOffsetBeats(event, rowsPerBeat);
+                const widthBeats = event.note.durationUnits / rowsPerBeat;
+                const x = LANE_PITCH_RULER_WIDTH + onsetBeat * pxPerBeat;
+                const w = widthBeats * pxPerBeat;
+                const fill = voiceColor(lane.voice);
+                const opacity = dynamicToOpacity(event.note.dynamic);
+                return event.note.pitches.map((pitch, pi) => {
+                  const y =
+                    lane.yTop + (lane.range.maxMidi - pitch.midi) * PX_PER_SEMITONE;
+                  return (
+                    <rect
+                      key={`note-${lane.voice}-${event.absolutePosition}-${pi}-${pitch.midi}`}
+                      x={x}
+                      y={y}
+                      width={Math.max(2, w)}
+                      height={PX_PER_SEMITONE}
+                      rx={1}
+                      fill={fill}
+                      fillOpacity={opacity}
+                      stroke={fill}
+                      strokeOpacity={0.85}
+                      strokeWidth={0.5}
+                    />
+                  );
+                });
+              })}
+            </g>
+          ))}
+
+          {/* Range overlay (drag in progress or committed range) */}
+          {(() => {
+            const range =
+              drag !== null
+                ? {
+                    startBar: Math.min(drag.startBar, drag.endBar),
+                    endBar: Math.max(drag.startBar, drag.endBar),
+                  }
+                : selection.kind === "range"
+                  ? { startBar: selection.startBar, endBar: selection.endBar }
+                  : null;
+            if (range === null) return null;
+            const startIdx = score.bars.findIndex((b) => b.index === range.startBar);
+            const endIdx = score.bars.findIndex((b) => b.index === range.endBar);
+            if (startIdx < 0 || endIdx < 0) return null;
+            const startBeat = barStartsBeats[startIdx];
+            const endBeat =
+              endIdx + 1 < barStartsBeats.length
+                ? barStartsBeats[endIdx + 1]
+                : totalBeats;
+            const x = LANE_PITCH_RULER_WIDTH + startBeat * pxPerBeat;
+            const w = (endBeat - startBeat) * pxPerBeat;
+            return (
+              <rect
+                x={x}
+                y={0}
+                width={w}
+                height={totalHeight}
+                fill="hsl(173 80% 40%)"
+                fillOpacity={0.1}
+                stroke="hsl(173 80% 50%)"
+                strokeOpacity={0.6}
+                strokeWidth={1}
+                pointerEvents="none"
+              />
+            );
+          })()}
+
+          {/* Playhead */}
+          <line
+            x1={LANE_PITCH_RULER_WIDTH + playhead * pxPerBeat}
+            y1={0}
+            x2={LANE_PITCH_RULER_WIDTH + playhead * pxPerBeat}
+            y2={totalHeight}
+            stroke="hsl(173 80% 55%)"
+            strokeWidth={1}
+            strokeDasharray="2 2"
+            pointerEvents="none"
+          />
+        </g>
+
+        {/* Fixed pitch-ruler column overlay (drawn last so it covers panned content) */}
+        <g>
+          <rect
+            x={0}
+            y={0}
+            width={LANE_PITCH_RULER_WIDTH}
+            height={totalHeight}
+            fill="hsl(240 14% 9%)"
+          />
+          <line
+            x1={LANE_PITCH_RULER_WIDTH}
+            y1={0}
+            x2={LANE_PITCH_RULER_WIDTH}
+            y2={totalHeight}
+            stroke="hsl(240 10% 16%)"
+            strokeWidth={1}
+          />
+          {lanes.map((lane) => (
+            <g key={`lane-header-${lane.voice}`}>
+              <rect
+                x={0}
+                y={lane.yTop}
+                width={LANE_PITCH_RULER_WIDTH}
+                height={lane.height}
+                fill={selectedVoice === lane.voice ? "hsl(173 80% 14%)" : "hsl(240 14% 9%)"}
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleVoice(lane.voice);
+                }}
+              />
+              <line
+                x1={4}
+                y1={lane.yTop + 2}
+                x2={4}
+                y2={lane.yTop + lane.height - 2}
+                stroke={voiceColor(lane.voice)}
+                strokeWidth={selectedVoice === lane.voice ? 3 : 2}
+                pointerEvents="none"
+              />
+              <text
+                x={12}
+                y={lane.yTop + 14}
+                fill="hsl(0 0% 96%)"
+                fontSize={11}
+                fontFamily="ui-monospace, monospace"
+                pointerEvents="none"
+              >
+                {lane.voice}
+              </text>
+              {(() => {
+                const ticks: number[] = [];
+                for (let m = lane.range.maxMidi; m >= lane.range.minMidi; m -= 1) {
+                  if (m % 12 === 0) ticks.push(m);
+                }
+                return ticks.map((m) => {
+                  const y = lane.yTop + (lane.range.maxMidi - m) * PX_PER_SEMITONE;
+                  return (
                     <text
+                      key={`octlabel-${lane.voice}-${m}`}
                       x={LANE_PITCH_RULER_WIDTH - 6}
                       y={y + 3}
                       fill="hsl(240 5% 50%)"
                       fontSize={9}
                       fontFamily="ui-monospace, monospace"
                       textAnchor="end"
+                      pointerEvents="none"
                     >
                       C{m / 12 - 1}
                     </text>
-                  </g>
-                );
-              });
-            })()}
-            {/* Bar lines crossing the lane */}
-            {barStartsBeats.map((b, i) => {
-              const x = LANE_PITCH_RULER_WIDTH + b * pxPerBeat;
-              return (
-                <line
-                  key={`barline-${lane.voice}-${i}`}
-                  x1={x}
-                  y1={lane.yTop}
-                  x2={x}
-                  y2={lane.yTop + lane.height}
-                  stroke="hsl(240 10% 18%)"
-                  strokeWidth={1}
-                />
-              );
-            })}
-            {/* Notes */}
-            {lane.events.flatMap((event) => {
-              const onsetBeat =
-                event.absolutePosition / rowsPerBeat +
-                computeOffsetBeats(event, rowsPerBeat);
-              const widthBeats = event.note.durationUnits / rowsPerBeat;
-              const x = LANE_PITCH_RULER_WIDTH + onsetBeat * pxPerBeat;
-              const w = widthBeats * pxPerBeat;
-              const fill = voiceColor(lane.voice);
-              const opacity = dynamicToOpacity(event.note.dynamic);
-              return event.note.pitches.map((pitch, pi) => {
-                const y =
-                  lane.yTop + (lane.range.maxMidi - pitch.midi) * PX_PER_SEMITONE;
-                return (
-                  <rect
-                    key={`note-${lane.voice}-${event.absolutePosition}-${pi}-${pitch.midi}`}
-                    x={x}
-                    y={y}
-                    width={Math.max(2, w)}
-                    height={PX_PER_SEMITONE}
-                    rx={1}
-                    fill={fill}
-                    fillOpacity={opacity}
-                    stroke={fill}
-                    strokeOpacity={0.85}
-                    strokeWidth={0.5}
-                  />
-                );
-              });
-            })}
-          </g>
-        ))}
-
-        {/* Range overlay (in-progress drag or committed range) */}
-        {(() => {
-          const range =
-            drag !== null
-              ? { startBar: Math.min(drag.startBar, drag.endBar), endBar: Math.max(drag.startBar, drag.endBar) }
-              : selection.kind === "range"
-                ? { startBar: selection.startBar, endBar: selection.endBar }
-                : null;
-          if (range === null) return null;
-          const startIdx = score.bars.findIndex((b) => b.index === range.startBar);
-          const endIdx = score.bars.findIndex((b) => b.index === range.endBar);
-          if (startIdx < 0 || endIdx < 0) return null;
-          const startBeat = barStartsBeats[startIdx];
-          const endBeat =
-            endIdx + 1 < barStartsBeats.length
-              ? barStartsBeats[endIdx + 1]
-              : totalBeats;
-          const x = LANE_PITCH_RULER_WIDTH + startBeat * pxPerBeat;
-          const w = (endBeat - startBeat) * pxPerBeat;
-          return (
-            <rect
-              x={x}
-              y={0}
-              width={w}
-              height={totalHeight}
-              fill="hsl(173 80% 40%)"
-              fillOpacity={0.1}
-              stroke="hsl(173 80% 50%)"
-              strokeOpacity={0.6}
-              strokeWidth={1}
-              pointerEvents="none"
-            />
-          );
-        })()}
-
-        {/* Playhead */}
-        <line
-          x1={playheadX}
-          y1={0}
-          x2={playheadX}
-          y2={totalHeight}
-          stroke="hsl(173 80% 55%)"
-          strokeWidth={1}
-          strokeDasharray="2 2"
-          pointerEvents="none"
-        />
+                  );
+                });
+              })()}
+            </g>
+          ))}
+        </g>
       </svg>
     </div>
   );
