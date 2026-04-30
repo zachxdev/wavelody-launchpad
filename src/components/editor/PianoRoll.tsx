@@ -288,8 +288,8 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
                   />
                 );
               })}
-              {/* Notes */}
-              {lane.events.flatMap((event) => {
+              {/* Notes (and sustain trails for notes with `s` suffix) */}
+              {lane.events.flatMap((event, eventIdx) => {
                 const onsetBeat =
                   event.absolutePosition / rowsPerBeat +
                   computeOffsetBeats(event, rowsPerBeat);
@@ -298,10 +298,51 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
                 const w = widthBeats * pxPerBeat;
                 const fill = voiceColor(lane.voice);
                 const opacity = dynamicToOpacity(event.note.dynamic);
-                return event.note.pitches.map((pitch, pi) => {
+
+                // Sustain trail: extends past the played duration to either the
+                // next event in this voice or the end of the bar, whichever
+                // arrives first. Per Phase-4 v1 approximation; full SUS-column
+                // tracking is post-Phase-4.
+                let trailWidth = 0;
+                if (event.note.sustain) {
+                  const noteEndBeat = onsetBeat + widthBeats;
+                  const nextEvent = lane.events[eventIdx + 1];
+                  const nextEventBeat = nextEvent
+                    ? nextEvent.absolutePosition / rowsPerBeat +
+                      computeOffsetBeats(nextEvent, rowsPerBeat)
+                    : Number.POSITIVE_INFINITY;
+                  const barIdx = score.bars.findIndex((b) => b.index === event.bar);
+                  const barEndBeat =
+                    barIdx + 1 < barStartsBeats.length
+                      ? barStartsBeats[barIdx + 1]
+                      : totalBeats;
+                  const trailEndBeat = Math.min(nextEventBeat, barEndBeat);
+                  if (trailEndBeat > noteEndBeat) {
+                    trailWidth = (trailEndBeat - noteEndBeat) * pxPerBeat;
+                  }
+                }
+
+                return event.note.pitches.flatMap((pitch, pi) => {
                   const y =
                     lane.yTop + (lane.range.maxMidi - pitch.midi) * PX_PER_SEMITONE;
-                  return (
+                  const out = [];
+                  if (trailWidth > 0) {
+                    out.push(
+                      <rect
+                        key={`trail-${lane.voice}-${event.absolutePosition}-${pi}-${pitch.midi}`}
+                        x={x + Math.max(2, w)}
+                        y={y}
+                        width={trailWidth}
+                        height={PX_PER_SEMITONE}
+                        rx={1}
+                        fill={fill}
+                        fillOpacity={Math.max(0.15, opacity * 0.35)}
+                        stroke="none"
+                        pointerEvents="none"
+                      />,
+                    );
+                  }
+                  out.push(
                     <rect
                       key={`note-${lane.voice}-${event.absolutePosition}-${pi}-${pitch.midi}`}
                       x={x}
@@ -312,10 +353,11 @@ const PianoRoll = ({ score, playhead, selection, onSelectionChange }: PianoRollP
                       fill={fill}
                       fillOpacity={opacity}
                       stroke={fill}
-                      strokeOpacity={0.85}
+                      strokeOpacity={1}
                       strokeWidth={0.5}
-                    />
+                    />,
                   );
+                  return out;
                 });
               })}
             </g>
