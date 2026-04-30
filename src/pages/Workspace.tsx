@@ -12,24 +12,25 @@ import MdslGrid from "@/components/editor/MdslGrid";
 import { NO_SELECTION, type Selection } from "@/components/editor/selection";
 import { parse, type Score } from "@/lib/musicdsl";
 
-const FIXTURE_URL = "/fixtures/basic_4-4.mdsl";
+const FIXTURE_URL = "/fixtures/piano_trio.mdsl";
 
 const INITIAL_PASSES: Pass[] = [
   {
     id: "chord-skeleton",
     title: "Chord Skeleton",
-    voices: ["Piano LH", "Piano RH"],
+    voices: ["LH", "RH"],
     status: "ready",
   },
-  { id: "bass-line", title: "Bass Line", voices: ["Bass"], status: "ready" },
-  { id: "drums", title: "Drums", voices: ["Drums"], status: "ready" },
-  { id: "melody", title: "Melody", voices: ["Piano RH"], status: "ready" },
+  { id: "bass-line", title: "Bass Line", voices: ["Vc"], status: "ready" },
+  { id: "strings", title: "Strings", voices: ["V", "Vc"], status: "ready" },
+  { id: "melody", title: "Melody", voices: ["RH", "V"], status: "ready" },
 ];
 
 const INITIAL_CHANNELS: MixerChannel[] = [
-  { name: "Piano", gain: 0.8, pan: 0, muted: false, soloed: false },
-  { name: "Bass", gain: 0.8, pan: 0, muted: false, soloed: false },
-  { name: "Drums", gain: 0.8, pan: 0, muted: false, soloed: false },
+  { name: "LH", gain: 0.8, pan: 0, muted: false, soloed: false },
+  { name: "RH", gain: 0.8, pan: 0, muted: false, soloed: false },
+  { name: "V", gain: 0.8, pan: 0, muted: false, soloed: false },
+  { name: "Vc", gain: 0.8, pan: 0, muted: false, soloed: false },
 ];
 
 const Workspace = () => {
@@ -84,9 +85,21 @@ const Workspace = () => {
     setChannels((prev) => prev.map((c, i) => (i === index ? next : c)));
   };
 
+  const projectName = score?.header.title ?? "Loading…";
+  const tempo = score?.header.tempo ?? 120;
+  const keyName = score?.header.key ?? "—";
+  const timeSig = score
+    ? `${score.header.timeSignature.numerator}/${score.header.timeSignature.denominator}`
+    : "—";
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
-      <TopBar />
+      <TopBar
+        projectName={projectName}
+        tempo={tempo}
+        keyName={keyName}
+        timeSignature={timeSig}
+      />
 
       <div className="flex flex-1 min-h-0">
         <PassesPane
