@@ -1,15 +1,18 @@
-// Audio stem loading. Phase 6 supports two paths:
+// Audio stem loading. Two paths:
 //
-//   1. Static fixtures under /public/audio/<piece>_<voice>.wav. If they exist,
-//      decodeWavFromUrl fetches and decodes each stem.
-//   2. Synthesized placeholders (audio-synth.ts). When the static path returns
-//      no usable stems, Workspace falls back to synthesizing per-voice buffers
-//      from the parsed Score so the demo can play end-to-end without RunPod.
+//   1. /api/render — Performer v0 service via the Worker proxy. Returns a
+//      RenderResponse with per-voice URLs we fetch + decode. This is the
+//      Phase 8b production path.
+//   2. Synthesized placeholders (audio-synth.ts). Used as a fallback when
+//      no render URLs are available — local dev without Performer running,
+//      or when /api/render itself failed.
 //
-// Phase 8 swaps in the real RunPod Performer endpoint at the same boundary.
+// The legacy `loadStemsForScore(score, pieceId)` overload is kept for the
+// dev fixture path under /public/audio/.
 
 import * as Tone from "tone";
 import type { Score } from "@/lib/musicdsl";
+import type { RenderStem } from "../../../api/types";
 
 export async function decodeWavFromUrl(
   url: string,
@@ -52,4 +55,27 @@ export async function loadStemsForScore(
     }),
   );
   return { stems, failed };
+}
+
+// Load per-voice stems from /api/render output. Each RenderStem carries a
+// URL the Worker has populated (R2 in prod, Performer pass-through in dev).
+// Returns the loaded AudioBuffers keyed by voice id, plus the list of any
+// voices that failed to load — caller decides whether to swap them out
+// for synthesized placeholders.
+export async function loadStemsFromRender(
+  stems: RenderStem[],
+): Promise<StemLoadResult> {
+  const out = new Map<string, AudioBuffer>();
+  const failed: string[] = [];
+  await Promise.all(
+    stems.map(async (s) => {
+      try {
+        const buffer = await decodeWavFromUrl(s.url);
+        out.set(s.voice_id, buffer);
+      } catch {
+        failed.push(s.voice_id);
+      }
+    }),
+  );
+  return { stems: out, failed };
 }

@@ -31,3 +31,4 @@ export {
 export { expandRests } from "./expandRests";
 export { extractVoices } from "./extractVoices";
 export type { NoteEvent, VoiceStream } from "./extractVoices";
+export { mergeEditSlice } from "./merge";
