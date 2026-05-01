@@ -70,3 +70,103 @@ export const KEY_PREFIX = {
   inflight: "inflight:",
   killswitch: "killswitch:active",
 } as const;
+
+// ---------- Phase 8b endpoint contracts ----------
+
+// /api/generate — composition. Streamed back as SSE events; the final
+// `result` event carries the assembled MusicDSL string.
+export interface GenerateRequest {
+  prompt: string;
+  // Optional ensemble template hint. Defaults to "piano_trio" — the demo
+  // template — when omitted.
+  template?: EnsembleTemplate;
+}
+
+// /api/edit — scoped edit. Returns a MusicDSL slice covering the requested
+// bar range that the frontend merges into the AST.
+export interface EditRequest {
+  voice_id: string;
+  bar_start: number;
+  bar_end: number;
+  edit_prompt: string;
+  current_score: string;
+}
+
+export interface EditResponse {
+  slice: string;
+  bar_start: number;
+  bar_end: number;
+  voice_id: string;
+}
+
+// /api/render — Performer v0 proxy.
+//
+// voices_to_render: when provided, the Worker re-renders only those voices
+// and pulls every other voice's WAV from the R2 cache. This is the path
+// scoped edits take so the user only pays the latency for the changed
+// voice.
+export interface RenderRequest {
+  musicdsl: string;
+  template: EnsembleTemplate;
+  voice_assignments?: Record<string, string>;
+  voices_to_render?: string[];
+}
+
+export interface RenderStem {
+  voice_id: string;
+  url: string;
+}
+
+export interface RenderResponse {
+  master_url: string;
+  stems: RenderStem[];
+  cached: boolean;
+}
+
+// /api/critique — Gemini multimodal call.
+export interface CritiqueRequest {
+  musicdsl: string;
+  master_wav_url: string;
+  original_prompt: string;
+}
+
+export interface CritiqueSuggestion {
+  // Free-form location string e.g. "bar 3 beat 49 voice V". Gemini fills
+  // this in natural-language form rather than a structured trio so the
+  // model can describe ranges, sub-row positions, and voice-pairs.
+  location: string;
+  issue: string;
+  suggested_fix: string;
+}
+
+export interface CritiqueResponse {
+  suggestions: CritiqueSuggestion[];
+}
+
+// Standard error body shape returned by every Phase 8b endpoint.
+export interface ApiError {
+  error: string;
+  detail?: string;
+  retry_after_seconds?: number;
+}
+
+// Demo ensemble templates. Phase 8b ships piano_trio only; future templates
+// land alongside the corresponding Performer v0 instrument profiles.
+export type EnsembleTemplate = "piano_trio" | "string_quartet";
+
+export const DEFAULT_TEMPLATE: EnsembleTemplate = "piano_trio";
+
+// Per-template voice assignments — what instrument each voice column maps
+// to in Performer v0. The Performer takes the same shape over the wire.
+export const TEMPLATE_VOICE_ASSIGNMENTS: Record<
+  EnsembleTemplate,
+  Record<string, string>
+> = {
+  piano_trio: { LH: "piano_lh", RH: "piano_rh", V: "violin", Vc: "cello" },
+  string_quartet: { V1: "violin", V2: "violin", VA: "viola", VC: "cello" },
+};
+
+// Hard cap on free-form prompt length. The Engine Readiness Gate calls out
+// that prompts should be terse; 1000 chars accommodates the longest
+// suggested prompt with breathing room.
+export const PROMPT_MAX_CHARS = 1000;

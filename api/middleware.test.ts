@@ -61,7 +61,12 @@ let env: Env;
 
 beforeEach(() => {
   kv = new MockKv();
-  env = { WAVELODY_CODES: asKv(kv), WAVELODY_JWT_SECRET: SECRET };
+  env = {
+    WAVELODY_CODES: asKv(kv),
+    WAVELODY_JWT_SECRET: SECRET,
+    ANTHROPIC_API_KEY: "test-anthropic-key",
+    GEMINI_API_KEY: "test-gemini-key",
+  };
 });
 
 describe("authenticate", () => {
