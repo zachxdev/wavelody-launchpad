@@ -8,16 +8,38 @@ import ScoreToolbar, {
 } from "@/components/shell/ScoreToolbar";
 import MixerPane from "@/components/shell/MixerPane";
 import { MixerChannel } from "@/components/shell/MixerRow";
-import PromptDock from "@/components/shell/PromptDock";
+import PromptDock, {
+  type EditScope,
+  type PromptDockStatus,
+} from "@/components/shell/PromptDock";
+import CritiquePanel from "@/components/shell/CritiquePanel";
 import { Pass } from "@/components/shell/PassCard";
 import PianoRoll from "@/components/editor/PianoRoll";
 import MdslGrid from "@/components/editor/MdslGrid";
 import { NO_SELECTION, type Selection } from "@/components/editor/selection";
-import { parse, type Score } from "@/lib/musicdsl";
-import { Transport, synthesizeStemsForScore } from "@/lib/audio";
+import {
+  parse,
+  serialize,
+  mergeEditSlice,
+  type Score,
+} from "@/lib/musicdsl";
+import {
+  Transport,
+  loadStemsFromRender,
+  synthesizeStemsForScore,
+} from "@/lib/audio";
 import { clearSession, getSession } from "@/lib/auth/client";
+import {
+  ApiError,
+  postCritique,
+  postEdit,
+  postGenerate,
+  postRender,
+} from "@/lib/api";
+import type { CritiqueSuggestion, EnsembleTemplate } from "../../api/types";
 
 const FIXTURE_URL = "/fixtures/piano_trio.mdsl";
+const ACTIVE_TEMPLATE: EnsembleTemplate = "piano_trio";
 
 const INITIAL_PASSES: Pass[] = [
   {
@@ -38,6 +60,12 @@ const INITIAL_CHANNELS: MixerChannel[] = [
   { name: "Vc", gain: 0.8, pan: 0, muted: false, soloed: false },
 ];
 
+interface CritiqueState {
+  status: "idle" | "loading" | "ready" | "error";
+  suggestions: CritiqueSuggestion[];
+  errorMessage?: string;
+}
+
 const Workspace = () => {
   const navigate = useNavigate();
   const [authChecked, setAuthChecked] = useState(false);
@@ -53,6 +81,9 @@ const Workspace = () => {
 
   const [dockOpen, setDockOpen] = useState(true);
   const [promptText, setPromptText] = useState("");
+  const [promptStatus, setPromptStatus] = useState<PromptDockStatus>({
+    kind: "idle",
+  });
 
   const [score, setScore] = useState<Score | null>(null);
   const [selection, setSelection] = useState<Selection>(NO_SELECTION);
@@ -61,11 +92,17 @@ const Workspace = () => {
   const [voicesReady, setVoicesReady] = useState(false);
   const [audioStatus, setAudioStatus] = useState<AudioStatus>("idle");
 
+  // Tracking the most recent rendered master URL so /api/critique can run
+  // against the audio the user is actually hearing.
+  const lastMasterUrlRef = useRef<string | null>(null);
+  const lastPromptRef = useRef<string>("");
+
+  const [critique, setCritique] = useState<CritiqueState>({
+    status: "idle",
+    suggestions: [],
+  });
+
   useEffect(() => {
-    // Decode the stored JWT shape + check expiry. Signature verification is
-    // server-side only on subsequent /api/* calls — this is just a fast
-    // client-side gate to avoid rendering the workspace for an obviously
-    // bogus or expired token.
     const session = getSession();
     if (!session) {
       clearSession();
@@ -112,8 +149,6 @@ const Workspace = () => {
       setCurrentBeat(0);
     });
 
-    // Synthesize placeholder stems and load into the transport.
-    // Real WAV stems via loader.ts will land here in Phase 8.
     setAudioStatus("loading");
     let cancelled = false;
     synthesizeStemsForScore(score)
@@ -142,9 +177,6 @@ const Workspace = () => {
     };
   }, [score]);
 
-  // Reflect mixer state onto the live transport whenever it changes — and
-  // again once voicesReady flips so the initial defaults reach the per-voice
-  // Tone.Channel nodes that only exist after load() completes.
   useEffect(() => {
     const t = transportRef.current;
     if (!t) return;
@@ -176,6 +208,156 @@ const Workspace = () => {
 
   const onStop = () => transportRef.current?.stop();
 
+  // ---------- Selection → edit scope ----------
+  const editScope: EditScope | null =
+    selection.kind === "range" && selection.voice
+      ? {
+          voice: selection.voice,
+          startBar: selection.startBar,
+          endBar: selection.endBar,
+        }
+      : null;
+
+  const clearScope = () => setSelection(NO_SELECTION);
+
+  // ---------- Generate / edit / render / critique pipeline ----------
+
+  const renderAndLoad = async (
+    targetScore: Score,
+    voicesToRender?: string[],
+  ): Promise<string | null> => {
+    setPromptStatus({ kind: "rendering" });
+    try {
+      const renderResp = await postRender({
+        musicdsl: serialize(targetScore),
+        template: ACTIVE_TEMPLATE,
+        voices_to_render: voicesToRender,
+      });
+      lastMasterUrlRef.current = renderResp.master_url;
+      const t = transportRef.current;
+      if (t) {
+        const { stems, failed } = await loadStemsFromRender(renderResp.stems);
+        if (failed.length > 0) {
+          // Fill missing voices with synthesised placeholders so playback
+          // never silently drops a voice — better to hear a sine than
+          // nothing.
+          const synth = await synthesizeStemsForScore(targetScore);
+          for (const v of failed) {
+            const placeholder = synth.get(v);
+            if (placeholder) stems.set(v, placeholder);
+          }
+        }
+        await t.load(stems);
+      }
+      return renderResp.master_url;
+    } catch (e: unknown) {
+      console.error("Render failed", e);
+      // Fall back to synthesised stems so the user still has something to
+      // hear. Critique will not run without a real WAV URL.
+      const t = transportRef.current;
+      if (t) {
+        const synth = await synthesizeStemsForScore(targetScore);
+        await t.load(synth);
+      }
+      return null;
+    }
+  };
+
+  const runCritique = async (
+    targetScore: Score,
+    masterUrl: string,
+    originalPrompt: string,
+  ): Promise<void> => {
+    setCritique({ status: "loading", suggestions: [] });
+    try {
+      const result = await postCritique({
+        musicdsl: serialize(targetScore),
+        master_wav_url: masterUrl,
+        original_prompt: originalPrompt,
+      });
+      setCritique({ status: "ready", suggestions: result.suggestions });
+    } catch (e: unknown) {
+      const message =
+        e instanceof ApiError ? e.body.error : (e as Error).message;
+      setCritique({ status: "error", suggestions: [], errorMessage: message });
+    }
+  };
+
+  const handleGenerate = async (): Promise<void> => {
+    const trimmed = promptText.trim();
+    if (trimmed.length === 0) return;
+    lastPromptRef.current = trimmed;
+    setPromptStatus({ kind: "composing", attempt: 1, preview: "" });
+    setCritique({ status: "idle", suggestions: [] });
+    try {
+      const result = await postGenerate(
+        { prompt: trimmed, template: ACTIVE_TEMPLATE },
+        {
+          onAttempt: (attempt) =>
+            setPromptStatus({ kind: "composing", attempt, preview: "" }),
+          onChunk: (chunk) =>
+            setPromptStatus((prev) => {
+              if (prev.kind !== "composing") return prev;
+              return {
+                kind: "composing",
+                attempt: prev.attempt,
+                preview: (prev.preview + chunk).slice(-80),
+              };
+            }),
+        },
+      );
+      const newScore = parse(result.musicdsl);
+      setScore(newScore);
+      setSelection(NO_SELECTION);
+      const masterUrl = await renderAndLoad(newScore);
+      setPromptStatus({ kind: "idle" });
+      if (masterUrl) {
+        void runCritique(newScore, masterUrl, trimmed);
+      }
+    } catch (e: unknown) {
+      const message =
+        e instanceof ApiError ? e.body.error : (e as Error).message;
+      setPromptStatus({ kind: "error", message });
+    }
+  };
+
+  const handleEdit = async (scope: EditScope): Promise<void> => {
+    if (!score) return;
+    const trimmed = promptText.trim();
+    if (trimmed.length === 0) return;
+    setPromptStatus({ kind: "editing" });
+    setCritique({ status: "idle", suggestions: [] });
+    try {
+      const sliceResp = await postEdit({
+        voice_id: scope.voice,
+        bar_start: scope.startBar,
+        bar_end: scope.endBar,
+        edit_prompt: trimmed,
+        current_score: serialize(score),
+      });
+      const sliceScore = parse(sliceResp.slice);
+      const merged = mergeEditSlice(score, sliceScore, scope.voice);
+      setScore(merged);
+      const masterUrl = await renderAndLoad(merged, [scope.voice]);
+      setPromptStatus({ kind: "idle" });
+      if (masterUrl) {
+        void runCritique(merged, masterUrl, lastPromptRef.current || trimmed);
+      }
+    } catch (e: unknown) {
+      const message =
+        e instanceof ApiError ? e.body.error : (e as Error).message;
+      setPromptStatus({ kind: "error", message });
+    }
+  };
+
+  const onSubmitDock = () => {
+    if (editScope) {
+      void handleEdit(editScope);
+    } else {
+      void handleGenerate();
+    }
+  };
+
   const projectName = score?.header.title ?? "Loading…";
   const tempo = score?.header.tempo ?? 120;
   const keyName = score?.header.key ?? "—";
@@ -184,9 +366,6 @@ const Workspace = () => {
     : "—";
   const beatsPerBar = score?.header.timeSignature.numerator ?? 4;
   const totalBars = score?.bars.length ?? 1;
-  // Clamp the displayed playhead to [0, totalBars*beatsPerBar - epsilon] so
-  // overshoot past the end of the rendered audio doesn't show e.g. "Bar 33".
-  // (Auto-stop at end is a separate concern; tracked for a follow-up.)
   const maxBeat = totalBars * beatsPerBar - 1e-6;
   const clampedBeat = Math.max(0, Math.min(currentBeat, maxBeat));
   const currentBar = Math.floor(clampedBeat / beatsPerBar) + 1;
@@ -204,9 +383,6 @@ const Workspace = () => {
     t.seek(clamped);
   };
 
-  // Map playhead to an MdslGrid row location: 0-based row index inside the
-  // current bar. Resolution comes from the corresponding bar so mid-piece
-  // <RESOLUTION:N> overrides will Just Work once we tighten that path.
   const gridPlayhead = (() => {
     if (!score) return undefined;
     const bar = score.bars.find((b) => b.index === currentBar);
@@ -286,14 +462,21 @@ const Workspace = () => {
         />
       </div>
 
+      <CritiquePanel
+        status={critique.status}
+        suggestions={critique.suggestions}
+        errorMessage={critique.errorMessage}
+      />
+
       <PromptDock
         open={dockOpen}
         onToggle={() => setDockOpen((o) => !o)}
         value={promptText}
         onChange={setPromptText}
-        onGenerate={() => {
-          /* no-op */
-        }}
+        onSubmit={onSubmitDock}
+        editScope={editScope}
+        onClearScope={clearScope}
+        status={promptStatus}
       />
     </div>
   );
