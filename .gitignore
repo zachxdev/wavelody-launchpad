@@ -24,6 +24,34 @@ dist-ssr
 *.sw?
 .dev.vars
 
+# Wrangler / Cloudflare
+.wrangler/
+.mf/
+
+# Build / framework caches
+.cache/
+.parcel-cache/
+.turbo/
+.next/
+.astro/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment variants beyond .dev.vars
+.env
+.env.local
+.env.*.local
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# OS junk
+Thumbs.db
+
+
+
 # Per-session Claude Code worktrees — never commit these, they belong to a
 # specific session and rot the moment the session ends.
 .claude/worktrees/
