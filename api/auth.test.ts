@@ -101,6 +101,35 @@ describe("POST /api/auth", () => {
     });
   });
 
+  it("issues a JWT for the built-in dev-network-owner code without KV seed", async () => {
+    const resp = await handleAuth(
+      makePost({ code: "dev-network-owner" }),
+      env,
+    );
+    expect(resp.status).toBe(200);
+    const body = (await resp.json()) as {
+      token: string;
+      session: { code: string; tier: string; label: string };
+    };
+    expect(body.session.code).toBe("dev-network-owner");
+    expect(body.session.tier).toBe("reviewer");
+    // The auth handler should have materialised the code into KV so quota
+    // tracking and revoke checks work on subsequent middleware reads.
+    const stored = kv.raw().get(KEY_PREFIX.code + "dev-network-owner");
+    expect(stored).toBeTruthy();
+    const parsed = JSON.parse(stored as string) as AccessCode;
+    expect(parsed.label).toBe("Dev Network Owner");
+    expect(parsed.revoked).toBe(false);
+  });
+
+  it("accepts the built-in code case-insensitively", async () => {
+    const resp = await handleAuth(
+      makePost({ code: "DEV-Network-Owner" }),
+      env,
+    );
+    expect(resp.status).toBe(200);
+  });
+
   it("touches last_seen_at on success", async () => {
     const code = makeAccessCode();
     kv.set(KEY_PREFIX.code + code.code, JSON.stringify(code));

@@ -6,10 +6,13 @@
 //   - session: AccessCode minus counters, plus expires_at and tier.
 // 400 if the body is malformed or the code is missing/empty.
 // 400 if the code doesn't match the format regex.
-// 401 if the code isn't in KV, or is revoked, or its expires_at has passed.
+// 401 if the code isn't in KV (or in the built-in fallback list), or is
+// revoked, or its expires_at has passed. Built-in codes are materialised
+// into KV on first auth so subsequent middleware reads behave normally.
 
 import { json } from "./http";
 import { signJwt } from "./jwt";
+import { buildBuiltInAccessCode } from "./builtin-codes";
 import type { AccessCode, JwtPayload, SessionInfo, SessionMeta } from "./types";
 import {
   ACCESS_CODE_REGEX,
@@ -45,15 +48,20 @@ export async function handleAuth(
 
   const normalized = code.toLowerCase();
   const stored = await env.WAVELODY_CODES.get(KEY_PREFIX.code + normalized);
-  if (!stored) {
-    return json({ error: "Code not recognized" }, 401);
-  }
 
   let accessCode: AccessCode;
-  try {
-    accessCode = JSON.parse(stored) as AccessCode;
-  } catch {
-    return json({ error: "Corrupted code record" }, 500);
+  if (stored === null) {
+    const builtIn = buildBuiltInAccessCode(normalized);
+    if (!builtIn) {
+      return json({ error: "Code not recognized" }, 401);
+    }
+    accessCode = builtIn;
+  } else {
+    try {
+      accessCode = JSON.parse(stored) as AccessCode;
+    } catch {
+      return json({ error: "Corrupted code record" }, 500);
+    }
   }
 
   if (accessCode.revoked) {
