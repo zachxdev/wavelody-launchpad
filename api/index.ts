@@ -33,18 +33,25 @@ export default {
     }
 
     const url = new URL(request.url);
-    const handler = ROUTES[url.pathname];
-    if (!handler) {
-      return withCors(json({ error: "Not found" }, 404));
+
+    // API routes
+    if (url.pathname.startsWith("/api/")) {
+      const handler = ROUTES[url.pathname];
+      if (!handler) {
+        return withCors(json({ error: "Not found" }, 404));
+      }
+
+      try {
+        const response = await handler(request, env);
+        return withCors(response);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : "Internal server error";
+        console.error("Unhandled error in", url.pathname, e);
+        return withCors(json({ error: message }, 500));
+      }
     }
 
-    try {
-      const response = await handler(request, env);
-      return withCors(response);
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Internal server error";
-      console.error("Unhandled error in", url.pathname, e);
-      return withCors(json({ error: message }, 500));
-    }
+    // Everything else: static frontend assets
+    return env.ASSETS.fetch(request);
   },
 };
