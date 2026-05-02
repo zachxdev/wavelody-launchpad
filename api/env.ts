@@ -3,6 +3,9 @@
 // import it from scripts/.
 
 export interface Env {
+  // Static frontend assets (dist/) bound via wrangler.toml [assets].
+  ASSETS: Fetcher;
+
   // Phase 7: auth + rate-limit.
   WAVELODY_CODES: KVNamespace;
   WAVELODY_JWT_SECRET: string;
