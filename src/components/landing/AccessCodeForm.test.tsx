@@ -9,7 +9,7 @@ function renderWithRouter() {
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
         <Route path="/" element={<AccessCodeForm />} />
-        <Route path="/auth-success" element={<div data-testid="auth-success" />} />
+        <Route path="/app" element={<div data-testid="auth-success" />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 describe("AccessCodeForm", () => {
-  it("posts to /api/auth, stores session, redirects to /auth-success", async () => {
+  it("posts to /api/auth, stores session, redirects to /app", async () => {
     mockFetch.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
