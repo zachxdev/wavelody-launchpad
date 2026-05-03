@@ -130,7 +130,6 @@ function composeStream(
                 max_tokens: COMPOSE_MAX_TOKENS,
                 system,
                 messages: [{ role: "user", content: req.prompt }],
-                temperature: 0.7,
               },
               (chunk) => send("chunk", { text: chunk }),
             );

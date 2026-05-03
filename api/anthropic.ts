@@ -41,7 +41,9 @@ export interface AnthropicRequest {
   system: SystemBlock[];
   messages: UserMessage[];
   stream?: boolean;
-  temperature?: number;
+  // `temperature` deliberately omitted: the current Opus 4.x line returns
+  // 400 ("temperature is deprecated for this model") when the field is
+  // present. Default sampling is appropriate for our generation budget.
 }
 
 export interface AnthropicError {

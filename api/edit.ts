@@ -74,7 +74,6 @@ export async function handleEdit(
           max_tokens: EDIT_MAX_TOKENS,
           system,
           messages: [{ role: "user", content: userMsg }],
-          temperature: 0.6,
         });
       } catch (e: unknown) {
         const status = e instanceof AnthropicHttpError ? e.status : 500;
