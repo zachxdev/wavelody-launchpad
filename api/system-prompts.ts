@@ -153,7 +153,15 @@ Output rules:
 - 16-32 bars typical. Default to 16 if unsure.
 - Always set RESOLUTION to 96 unless the time signature dictates otherwise.
 - Every bar starts at BEAT=1 and ends with ' |' on its last row.
-- Note duration must not overflow the bar.`;
+- Note duration must not overflow the bar.
+- ROW DISCIPLINE: every grid row MUST have exactly N voice cells where
+  N matches the VOICES header count. Never elide a voice column even
+  when its cell is silent — use '-' for an inactive voice but never
+  drop the cell. If VOICES is 'LH, RH, V, Vc' (4 voices) every grid
+  row has 9 comma-separated fields total: BAR, BEAT, STR, HAR, SUS,
+  LH, RH, V, Vc. Antiphonal / echo / call-and-response phrases are
+  no exception: when one voice answers another, the silent voices
+  still get '-' cells on every row.`;
 
 const EDIT_INSTRUCTIONS = `You are an editor. Given the FULL current score
 and an edit instruction scoped to (voice, bar range), produce a
