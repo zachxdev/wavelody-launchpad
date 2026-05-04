@@ -142,34 +142,68 @@ Voice → instrument mapping the renderer expects:
 ${lines.join("\n")}`;
 }
 
-// Per-template physical-playability constraints. Keeps the model
-// inside what the target instruments can actually produce. Currently
-// only violin_solo has constraints; piano_trio + string_quartet are
-// polyphonic by nature so the existing free-form constraints are
-// sufficient. Phase 8.5m: added after v16-claude landed an unplayable
-// (E5, G#5) double-stop on bar 15 (both notes on the E string).
-const INSTRUMENT_CONSTRAINTS: Partial<Record<EnsembleTemplate, string>> = {
-  violin_solo: `PHYSICAL CONSTRAINTS — solo violin:
-- Range: G3 (MIDI 55) to E7 (MIDI 100). Never write notes outside
-  this range; high-position writing above E7 is harmonics-only.
-- Polyphony: at most 2 simultaneous pitches per token (double-stops).
-  Never write 3+ note chords as sustained — if you want richer
-  harmony, break it into consecutive notes (arpeggio) instead.
-- Double-stop physics: the violin's four strings are tuned G3, D4,
-  A4, E5. A 2-note chord must place the lower note on one string
-  and the higher note on the NEXT-HIGHER string (adjacent only),
-  with the lower note STRICTLY BELOW the higher string's open
-  pitch. Examples that work: (A4, E5) — open A + open E; (B4, E5)
-  — A-string B4 + open E; (D5, F5) — A-string D5 + E-string F5.
-  Examples that DON'T work: (E5, G#5) — both notes require the
-  E string and cannot sustain together.
-- Speed: 16th-note runs (duration=6 at RES=96) are fine; faster
-  figures (duration<6) need explicit .trill or .legato
-  articulation, never as bare note tokens.`,
+// Per-instrument physical-playability constraint snippets. Phase
+// 8.5p generalises Phase-8.5m's per-template approach: instead of
+// storing whole-block strings keyed by template, we store per-
+// instrument snippets and aggregate them at build time based on
+// which instruments the active template uses. This means the
+// constraint block stays focused — a piano_trio compose only sees
+// violin + cello rules, not viola/bass.
+const PHYSICS_PROLOGUE = `PHYSICAL CONSTRAINTS — bowed string instruments:
+
+General rules (apply to every bowed-string voice listed below):
+- Polyphony cap: at most 2 simultaneous pitches per token (double-
+  stop). Never write 3+ note chords as sustained — break richer
+  harmony into consecutive notes (arpeggio) instead.
+- Double-stop physics: a 2-note chord must place the lower note on
+  one string and the higher note on the NEXT-HIGHER string
+  (adjacent only), with the lower note STRICTLY BELOW the higher
+  string's open pitch. Each note must fit within +7 semitones of
+  its assigned open string (1st-position fingering reach).
+
+Per-instrument range and open strings:`;
+
+const PER_INSTRUMENT_PHYSICS_BLOCK: Record<string, string> = {
+  violin: `  Violin: range G3 (MIDI 55) to E7 (MIDI 100).
+    Open strings: G3, D4, A4, E5.
+    Examples that work: (A4, E5) open A + open E; (B4, E5) A-string
+    + open E; (D5, F5) A-string D5 + E-string F5. Don't write
+    (E5, G#5) — both notes require the E string.`,
+  viola: `  Viola: range C3 (MIDI 48) to E6 (MIDI 88).
+    Open strings: C3, G3, D4, A4. Same adjacent-string rule as
+    violin, applied one fifth lower. Examples that work:
+    (D4, A4) open D + open A; (E4, A4) D-string E4 + open A.`,
+  cello: `  Cello: range C2 (MIDI 36) to E5 (MIDI 76).
+    Open strings: C2, G2, D3, A3. Examples that work:
+    (G2, D3) open G + open D; (E3, A3) D-string E3 + open A.`,
+  double_bass: `  Double Bass: range E1 (MIDI 28) to G3 (MIDI 55).
+    Open strings: E1, A1, D2, G2 (sounding pitches — MusicDSL is
+    sounding pitch; bass is conventionally written an octave higher
+    in score but the PITCH token here is the actual sounding MIDI).
+    Bass double-stops are rare in classical writing; when used,
+    follow the same adjacent-string rule.`,
 };
 
 function constraintsBlock(template: EnsembleTemplate): string {
-  return INSTRUMENT_CONSTRAINTS[template] ?? "";
+  const assignments = TEMPLATE_VOICE_ASSIGNMENTS[template];
+  if (!assignments) return "";
+  // Iterate in voice-declaration order so the constraint block
+  // mirrors the score's voice column ordering — matches what
+  // Claude/Gemini sees in the templateBlock above.
+  const seen = new Set<string>();
+  const inOrder: string[] = [];
+  for (const instrument of Object.values(assignments)) {
+    if (instrument in PER_INSTRUMENT_PHYSICS_BLOCK && !seen.has(instrument)) {
+      inOrder.push(instrument);
+      seen.add(instrument);
+    }
+  }
+  if (inOrder.length === 0) return "";
+  const sections = [PHYSICS_PROLOGUE];
+  for (const inst of inOrder) {
+    sections.push(PER_INSTRUMENT_PHYSICS_BLOCK[inst]);
+  }
+  return sections.join("\n\n");
 }
 
 const COMPOSE_INSTRUCTIONS = `You are a composer. Given a user prompt and an

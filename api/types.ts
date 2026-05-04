@@ -153,9 +153,13 @@ export interface ApiError {
 // Demo ensemble templates. Phase 8b ships piano_trio only; future templates
 // land alongside the corresponding Performer v0 instrument profiles.
 // Phase 8.5l adds violin_solo for A/B compose tests on a single-voice
-// score (strips multi-voice row-discipline complexity from the
-// composer evaluation).
-export type EnsembleTemplate = "piano_trio" | "string_quartet" | "violin_solo";
+// score. Phase 8.5p adds string_trio_with_bass — Haydn-style chamber
+// test bed for exercising the per-instrument bass routing.
+export type EnsembleTemplate =
+  | "piano_trio"
+  | "string_quartet"
+  | "violin_solo"
+  | "string_trio_with_bass";
 
 export const DEFAULT_TEMPLATE: EnsembleTemplate = "piano_trio";
 
@@ -168,6 +172,7 @@ export const TEMPLATE_VOICE_ASSIGNMENTS: Record<
   piano_trio: { LH: "piano_lh", RH: "piano_rh", V: "violin", Vc: "cello" },
   string_quartet: { V1: "violin", V2: "violin", VA: "viola", VC: "cello" },
   violin_solo: { V: "violin" },
+  string_trio_with_bass: { V: "violin", Vc: "cello", Db: "double_bass" },
 };
 
 // Hard cap on free-form prompt length. The Engine Readiness Gate calls out
