@@ -142,6 +142,36 @@ Voice → instrument mapping the renderer expects:
 ${lines.join("\n")}`;
 }
 
+// Per-template physical-playability constraints. Keeps the model
+// inside what the target instruments can actually produce. Currently
+// only violin_solo has constraints; piano_trio + string_quartet are
+// polyphonic by nature so the existing free-form constraints are
+// sufficient. Phase 8.5m: added after v16-claude landed an unplayable
+// (E5, G#5) double-stop on bar 15 (both notes on the E string).
+const INSTRUMENT_CONSTRAINTS: Partial<Record<EnsembleTemplate, string>> = {
+  violin_solo: `PHYSICAL CONSTRAINTS — solo violin:
+- Range: G3 (MIDI 55) to E7 (MIDI 100). Never write notes outside
+  this range; high-position writing above E7 is harmonics-only.
+- Polyphony: at most 2 simultaneous pitches per token (double-stops).
+  Never write 3+ note chords as sustained — if you want richer
+  harmony, break it into consecutive notes (arpeggio) instead.
+- Double-stop physics: the violin's four strings are tuned G3, D4,
+  A4, E5. A 2-note chord must place the lower note on one string
+  and the higher note on the NEXT-HIGHER string (adjacent only),
+  with the lower note STRICTLY BELOW the higher string's open
+  pitch. Examples that work: (A4, E5) — open A + open E; (B4, E5)
+  — A-string B4 + open E; (D5, F5) — A-string D5 + E-string F5.
+  Examples that DON'T work: (E5, G#5) — both notes require the
+  E string and cannot sustain together.
+- Speed: 16th-note runs (duration=6 at RES=96) are fine; faster
+  figures (duration<6) need explicit .trill or .legato
+  articulation, never as bare note tokens.`,
+};
+
+function constraintsBlock(template: EnsembleTemplate): string {
+  return INSTRUMENT_CONSTRAINTS[template] ?? "";
+}
+
 const COMPOSE_INSTRUCTIONS = `You are a composer. Given a user prompt and an
 ensemble template, produce a complete MusicDSL v2.2 score.
 
@@ -180,18 +210,25 @@ Output rules:
 - Maintain the same RESOLUTION and TIME as the current score.
 - No prose, no markdown fences.`;
 
+function cachedBlockText(template: EnsembleTemplate): string {
+  const cb = constraintsBlock(template);
+  // When a template has physical constraints (currently only
+  // violin_solo), insert the constraints block between the voice
+  // map and the worked examples. Templates without constraints
+  // keep the prior 3-section layout so their goldens stay
+  // byte-stable.
+  const sections = cb
+    ? [MUSICDSL_SPEC, "", templateBlock(template), "", cb, "", WORKED_EXAMPLES]
+    : [MUSICDSL_SPEC, "", templateBlock(template), "", WORKED_EXAMPLES];
+  return sections.join("\n\n");
+}
+
 export function buildComposeSystem(
   template: EnsembleTemplate,
 ): SystemBlock[] {
   const cached: SystemBlock = {
     type: "text",
-    text: [
-      MUSICDSL_SPEC,
-      "",
-      templateBlock(template),
-      "",
-      WORKED_EXAMPLES,
-    ].join("\n\n"),
+    text: cachedBlockText(template),
     cache_control: { type: "ephemeral" },
   };
   const tail: SystemBlock = {
@@ -212,13 +249,7 @@ export function buildEditSystem(
   // to cache the current-score / selection block — it varies per request.
   const cached: SystemBlock = {
     type: "text",
-    text: [
-      MUSICDSL_SPEC,
-      "",
-      templateBlock(template),
-      "",
-      WORKED_EXAMPLES,
-    ].join("\n\n"),
+    text: cachedBlockText(template),
     cache_control: { type: "ephemeral" },
   };
   const tail: SystemBlock = {
