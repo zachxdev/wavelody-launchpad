@@ -152,14 +152,23 @@ ${lines.join("\n")}`;
 const PHYSICS_PROLOGUE = `PHYSICAL CONSTRAINTS — bowed string instruments:
 
 General rules (apply to every bowed-string voice listed below):
-- Polyphony cap: at most 2 simultaneous pitches per token (double-
-  stop). Never write 3+ note chords as sustained — break richer
-  harmony into consecutive notes (arpeggio) instead.
-- Double-stop physics: a 2-note chord must place the lower note on
-  one string and the higher note on the NEXT-HIGHER string
-  (adjacent only), with the lower note STRICTLY BELOW the higher
-  string's open pitch. Each note must fit within +7 semitones of
-  its assigned open string (1st-position fingering reach).
+- Polyphony: 1 or 2 notes per token is a SUSTAINED chord (both
+  pitches bowed simultaneously as a double-stop). 3 or 4 notes per
+  token is a ROLLED chord — the bow sweeps bottom-to-top across the
+  strings in 50-100 ms; the lower notes play as quick attacks while
+  the top 2 notes sustain for the full token duration. Never write
+  5+ note chords (no bowed instrument has more than 4 strings). Use
+  3- and 4-note rolled chords for dramatic openings, cadential
+  punctuations, and idiomatic chord voicings — e.g. (E3,G3,B3,E4)
+  for an E minor chord across all 4 violin strings.
+- Sustained double-stop physics (exactly 2 notes): the two pitches
+  must be assigned to two ADJACENT strings, with the lower note
+  STRICTLY BELOW the higher string's open pitch. Each note must
+  fit within +7 semitones of its open string (1st-position reach).
+- Rolled chord physics (3 or 4 notes): one pitch per string, sorted
+  ascending → assigned to consecutive strings ascending. A 4-note
+  chord uses all 4 strings. Each pitch must fit within ~+14
+  semitones of its assigned open string (1st through 4th position).
 
 Per-instrument range and open strings:`;
 
