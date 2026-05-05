@@ -58,6 +58,18 @@ NR COMPRESSION: '11R' = 11 consecutive empty rows; '11R |' = same but the
   last empty row carries the bar terminator. Use NR aggressively to keep
   scores compact — 80%+ of rows are typically empty at RES 96.
 
+GLISSANDO (v2.2 §5.10): Q/q tokens encode pitch curves between notes.
+  q(PITCH:DYN:DUR) — arrival, parsed as a note token. The slide
+    traverses from the immediately preceding note's pitch to the
+    arrival's pitch, linearly across the source note's duration.
+  Q<pitch>[:<dyn>] — pass-through waypoint (intermediate pitch on the
+    slide path). Multiple Q tokens before the q arrival = curved slide.
+  Example — half-note A2 sliding down to F2 half-note:
+    5, 1,  -, i, -, (A2:p:48s)
+    5, 49, -, V, -, q(F2:ff:48)
+  Glissando applies to single pitches only — never inside chord syntax.
+  A slide must terminate with q (not Q).
+
 BAR TERMINATOR: append ' |' to the LAST content row of every bar.
   Every bar MUST start at BEAT=1 and end with '|'.
 
