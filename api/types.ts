@@ -154,11 +154,13 @@ export interface ApiError {
 // land alongside the corresponding Performer v0 instrument profiles.
 // Phase 8.5l adds violin_solo for A/B compose tests on a single-voice
 // score. Phase 8.5p adds string_trio_with_bass — Haydn-style chamber
-// test bed for exercising the per-instrument bass routing.
+// test bed for exercising the per-instrument bass routing. Phase 8.5v
+// adds cello_solo — same purpose as violin_solo, one octave lower.
 export type EnsembleTemplate =
   | "piano_trio"
   | "string_quartet"
   | "violin_solo"
+  | "cello_solo"
   | "string_trio_with_bass";
 
 export const DEFAULT_TEMPLATE: EnsembleTemplate = "piano_trio";
@@ -172,6 +174,7 @@ export const TEMPLATE_VOICE_ASSIGNMENTS: Record<
   piano_trio: { LH: "piano_lh", RH: "piano_rh", V: "violin", Vc: "cello" },
   string_quartet: { V1: "violin", V2: "violin", VA: "viola", VC: "cello" },
   violin_solo: { V: "violin" },
+  cello_solo: { Vc: "cello" },
   string_trio_with_bass: { V: "violin", Vc: "cello", Db: "double_bass" },
 };
 
