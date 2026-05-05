@@ -370,6 +370,17 @@ function parseCellTokens(cell: string, state: ParserState): CellTokens {
       // multi-waypoint curves are deferred per Phase 8.5y).
       const { nextIdx } = consumeQWaypoint(cell, i);
       i = nextIdx;
+    } else if (c === "Q" && cell[i + 1] === "(") {
+      // Parser tolerance for the variant `Q(<pitch>)` form used by
+      // some composers — strict §5.10 spec is `Q<pitch>` (no parens),
+      // but accepting the parenthesized form too is the spec-blessed
+      // "fall through to default" path. Skip past the closing paren
+      // without parsing the body as a note (the body is just a pitch,
+      // not a full PITCH:DYN:DUR triple).
+      let j = i + 2;
+      while (j < cell.length && cell[j] !== ")") j += 1;
+      if (j < cell.length) j += 1; // step past the ')'
+      i = j;
     } else if (c === "J" || c === "j" || c === "Y" || c === "y") {
       const { curve, nextIdx } = consumeCurveToken(cell, i, state);
       curves.push(curve);
@@ -380,6 +391,11 @@ function parseCellTokens(cell: string, state: ParserState): CellTokens {
       // audio routing lives in the player layer.
       const { nextIdx } = consumeTechniqueLetter(cell, i);
       i = nextIdx;
+    } else if (c === " " || c === "\t") {
+      // Whitespace between tokens (e.g. `Q(D4) Q(F4) q(A4:ff:60)`)
+      // is non-significant — composers occasionally space their
+      // tokens for readability. Skip silently.
+      i += 1;
     } else if (c === "@" || c === "&") {
       // v2.3 §5.12 reserved characters — explicit reject. The
       // validator also runs a full-source scan; we fail fast here
