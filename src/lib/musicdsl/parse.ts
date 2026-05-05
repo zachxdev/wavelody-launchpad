@@ -274,6 +274,63 @@ function consumeCurveToken(
   return { curve: { dim, releases, value, scope }, nextIdx: j };
 }
 
+// v2.3 §5.11 technique vocabulary — letters in voice columns that
+// set sticky instrument state. Brass mute letter `M` may carry a
+// lowercase suffix (Ms/Mc/Mh/Mp). The parser TOLERATES these tokens
+// (consumes and discards) so v2.3 scores don't crash the playback
+// path; per-letter audio routing lives in the renderer/player layer.
+const TECHNIQUE_LETTERS = new Set([
+  "H", "L", "M", "N", "O", "P", "S", "T", "W", "B", "Z",
+]);
+
+// v2.3 §5.10 glissando — Q (waypoint) and q (arrival) tokens.
+// Q<pitch>[:<dynamic>] is consumed as a tolerance pass-through here;
+// q(<pitch>:<dyn>:<dur>) goes through the existing note-token path
+// since the parens make it look like a regular note (the `q` prefix
+// is preserved on the AST as the `glissArrival` flag).
+
+function consumeQWaypoint(
+  cell: string,
+  i: number,
+): { nextIdx: number } {
+  // Q<step><alter?><octave>(:<dyn>)?  e.g. QC4, QEb4, QC4:mp
+  let j = i + 1;
+  // Pitch: step + optional accidental + octave digit(s).
+  while (j < cell.length && /[A-Ga-g#b\d]/.test(cell[j])) {
+    j += 1;
+  }
+  // Optional dynamic suffix after ':'.
+  if (cell[j] === ":") {
+    j += 1;
+    while (j < cell.length && /[a-z]/.test(cell[j])) {
+      j += 1;
+    }
+  }
+  return { nextIdx: j };
+}
+
+function consumeTechniqueLetter(
+  cell: string,
+  i: number,
+): { nextIdx: number } {
+  // Greedy-consume technique letters into a state set. Brass mute
+  // letter `M` may have a lowercase suffix (Ms/Mc/Mh/Mp).
+  let j = i;
+  while (j < cell.length && TECHNIQUE_LETTERS.has(cell[j])) {
+    const letter = cell[j];
+    j += 1;
+    // Optional brass mute type suffix on `M`.
+    if (
+      letter === "M" &&
+      j < cell.length &&
+      /[smchp]/.test(cell[j])
+    ) {
+      j += 1;
+    }
+  }
+  return { nextIdx: j };
+}
+
 function parseCellTokens(cell: string, state: ParserState): CellTokens {
   const notes: Note[] = [];
   const curves: ControlCurveToken[] = [];
@@ -284,10 +341,40 @@ function parseCellTokens(cell: string, state: ParserState): CellTokens {
       const { note, nextIdx } = consumeNoteToken(cell, i, state);
       notes.push(note);
       i = nextIdx;
+    } else if (c === "q" && cell[i + 1] === "(") {
+      // v2.3 §5.10 glissando arrival — consume the parenthesized note
+      // body as a regular note, but mark it. We tag the produced note
+      // by setting articulation = "gliss_arrival" if no other
+      // articulation was set; the renderer reads this flag.
+      const { note, nextIdx } = consumeNoteToken(cell, i + 1, state);
+      const tagged: Note = {
+        ...note,
+        articulation: note.articulation ?? "gliss_arrival",
+      };
+      notes.push(tagged);
+      i = nextIdx;
+    } else if (c === "Q" && /[A-Ga-g]/.test(cell[i + 1] ?? "")) {
+      // v2.3 §5.10 glissando waypoint — pitch waypoint with optional
+      // dynamic. Consumed and discarded for now (linear interpolation
+      // happens between the implicit source note and the q arrival;
+      // multi-waypoint curves are deferred per Phase 8.5y).
+      const { nextIdx } = consumeQWaypoint(cell, i);
+      i = nextIdx;
     } else if (c === "J" || c === "j" || c === "Y" || c === "y") {
       const { curve, nextIdx } = consumeCurveToken(cell, i, state);
       curves.push(curve);
       i = nextIdx;
+    } else if (TECHNIQUE_LETTERS.has(c)) {
+      // v2.3 §5.11 technique vocabulary — sticky-state letters in
+      // voice columns. Consume greedily; don't crash. Per-letter
+      // audio routing lives in the player layer.
+      const { nextIdx } = consumeTechniqueLetter(cell, i);
+      i = nextIdx;
+    } else if (c === "@" || c === "&") {
+      // v2.3 §5.12 reserved characters — explicit reject. The
+      // validator also runs a full-source scan; we fail fast here
+      // with a precise location so the parse error is actionable.
+      err(state, `Reserved character "${c}" (MusicDSL v2.3 §5.12)`);
     } else {
       err(state, `Unexpected character in voice cell: "${c}"`);
     }

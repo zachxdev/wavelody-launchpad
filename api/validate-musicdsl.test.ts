@@ -20,6 +20,36 @@ describe("validateMusicDsl", () => {
     }
   });
 
+  it("rejects @ reserved character per v2.3 §5.12", () => {
+    const bad = MIN_VALID.replace("(C4:mf:96)", "(C4:mf:96)@");
+    const result = validateMusicDsl(bad);
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(
+        result.errors.some((e) => e.includes("@") && e.includes("§5.12")),
+      ).toBe(true);
+    }
+  });
+
+  it("rejects & reserved character per v2.3 §5.12", () => {
+    const bad = MIN_VALID.replace("(C4:mf:96)", "(C&4:mf:96)");
+    const result = validateMusicDsl(bad);
+    expect(result.valid).toBe(false);
+  });
+
+  it("accepts a glissando q(...) arrival per v2.3 §5.10", () => {
+    const score = `# TITLE: Test
+# TEMPO: 120
+# TIME: 4/4
+# RESOLUTION: 96
+# VOICES: V1
+1, 1, -, I, -, (C4:mf:48)
+1, 49, -, V, -, q(G4:mf:48) |
+`;
+    const result = validateMusicDsl(score);
+    expect(result.valid).toBe(true);
+  });
+
   it("rejects a parse error and surfaces a single message", () => {
     const broken = `# TIME: 4/4
 # RESOLUTION: 96

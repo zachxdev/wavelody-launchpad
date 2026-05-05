@@ -265,6 +265,51 @@ describe("parse: anonymized fixture (v4)", () => {
   });
 });
 
+describe("parse: v2.3 tolerance (Phase 8.5z)", () => {
+  // Wrap a single voice cell in a minimal score for parser exercise.
+  const wrap = (cell: string) =>
+    `# VOICES: V\nBAR, BEAT, STR, HAR, SUS, V\n1, 1, -, -, -, ${cell} |\n`;
+
+  it("accepts q(...) glissando arrival without crashing", () => {
+    expect(() => parse(wrap("q(G4:mf:48)"))).not.toThrow();
+  });
+
+  it("accepts Q<pitch> waypoint without crashing", () => {
+    expect(() => parse(wrap("QG4"))).not.toThrow();
+  });
+
+  it("accepts Q<pitch>:<dyn> waypoint without crashing", () => {
+    expect(() => parse(wrap("QG4:mp"))).not.toThrow();
+  });
+
+  it("accepts technique letters without crashing", () => {
+    // Phase 8.5y/8.5z tolerance: parser consumes and discards.
+    for (const cell of ["P", "T", "L", "N", "H", "B", "Z", "O", "W", "S"]) {
+      expect(() => parse(wrap(cell))).not.toThrow();
+    }
+  });
+
+  it("accepts brass mute suffixes (Ms, Mc, Mh, Mp)", () => {
+    for (const cell of ["Ms", "Mc", "Mh", "Mp"]) {
+      expect(() => parse(wrap(cell))).not.toThrow();
+    }
+  });
+
+  it("accepts concatenated technique letters (LT, HM, WT)", () => {
+    for (const cell of ["LT", "HM", "WT"]) {
+      expect(() => parse(wrap(cell))).not.toThrow();
+    }
+  });
+
+  it("rejects @ as reserved character", () => {
+    expect(() => parse(wrap("(C4:mf:48)@"))).toThrow(ParseError);
+  });
+
+  it("rejects & as reserved character", () => {
+    expect(() => parse(wrap("&"))).toThrow(ParseError);
+  });
+});
+
 describe("parse: error reporting", () => {
   it("rejects unknown dynamic with line/column", () => {
     const text = `# VOICES: LH\nBAR, BEAT, STR, HAR, SUS, LH\n1, 1, -, -, -, (C4:zz:24) |\n`;

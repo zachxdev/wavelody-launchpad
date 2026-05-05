@@ -14,6 +14,8 @@
 //   4. Bar terminator: every bar's last content row carries `|` (endsBar).
 //   5. Voice count: header.voices.length matches per-row voice cells.
 //      (Already enforced by the parser, but we re-check defensively.)
+//   6. Reserved chars (v2.3 §5.12): `@` and `&` may not appear in any
+//      cell or metadata field — reserved for future syntax extensions.
 //
 // Returns { valid: true, score } so callers can re-use the parsed AST,
 // or { valid: false, errors } with one short message per failed
@@ -56,6 +58,18 @@ export function validateMusicDsl(source: string): ValidationResult {
 
   if (score.header.voices.length === 0) {
     errors.push("Header VOICES is empty.");
+  }
+
+  // v2.3 §5.12: reserved characters cannot appear anywhere in source.
+  // Scan the raw text — any presence is a hard reject. Reserving these
+  // now (and rejecting them) is cheap; reclaiming them post-training
+  // would require regenerating all training data.
+  for (const ch of ["@", "&"]) {
+    if (source.includes(ch)) {
+      errors.push(
+        `Reserved character '${ch}' present in score (MusicDSL v2.3 §5.12 — reserved for future syntax extensions).`,
+      );
+    }
   }
 
   for (const bar of score.bars) {
