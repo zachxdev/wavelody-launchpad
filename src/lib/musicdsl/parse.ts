@@ -162,11 +162,21 @@ function parseInnerNote(inner: string, state: ParserState): InnerNoteParts {
   let durPart = colonParts[2];
 
   // Articulation suffix: ".word" appearing after digits-and-optional-s.
+  // v2.3 §5.4.1 supports stacked articulations like ".accent.stac" —
+  // consume them all (greedy from the right). The captured value
+  // joins them with '.' so callers can recover the full chain.
   let articulation: string | undefined;
-  const artMatch = /\.([A-Za-z][A-Za-z0-9]*)$/.exec(durPart);
-  if (artMatch) {
-    articulation = artMatch[1];
+  const articulations: string[] = [];
+  // Repeatedly strip a trailing ".word" suffix until none remain.
+  // word allows optional numeric suffix per the original regex.
+  while (true) {
+    const artMatch = /\.([A-Za-z][A-Za-z0-9]*)$/.exec(durPart);
+    if (!artMatch) break;
+    articulations.unshift(artMatch[1]);
     durPart = durPart.slice(0, durPart.length - artMatch[0].length);
+  }
+  if (articulations.length > 0) {
+    articulation = articulations.join(".");
   }
 
   let sustain = false;

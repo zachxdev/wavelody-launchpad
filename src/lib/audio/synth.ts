@@ -123,6 +123,22 @@ function eventOnsetBeats(event: NoteEvent, rowsPerBeat: number): number {
   return event.absolutePosition / rowsPerBeat + (sign * fraction) / rowsPerBeat;
 }
 
+// Phase 8.5z (MusicDSL v2.3 tolerance): the parser at
+// src/lib/musicdsl/parse.ts silently consumes Q waypoints, technique
+// letters (H/L/M/N/O/P/S/T/W/B/Z + brass mute suffixes), expanded
+// articulation suffixes (.fall/.doit/.scoop/.shake/.flutter/.growl/
+// .slap/.click/.multi/.bisb/.hop/.accent/.tenuto), and rejects @/&.
+// The synth below reads only note.pitches, note.dynamic, and
+// note.durationUnits — fields that v2.3 didn't change — so no audio
+// realization for the new features lives here yet. Adding e.g. a
+// per-technique filter chain (sul tasto LP, mute, etc.) or per-
+// articulation envelope variant is a follow-up phase. q(...)
+// arrivals are tagged with articulation = "gliss_arrival" by the
+// parser; the synth currently treats them as plain notes (the slid
+// pitch glide is a Web Audio fractional-readout job that's also
+// deferred for the TS path). NEVER crashes on v2.3 tokens — the
+// tolerance contract is met by the parser.
+
 function scheduleNote(
   ctx: OfflineAudioContext,
   destination: AudioNode,
