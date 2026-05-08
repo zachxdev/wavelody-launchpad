@@ -1,127 +1,172 @@
-import { FileText, Layers, Award, Play } from "lucide-react";
+import { ArrowRight, Quote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import AccessCodeForm from "@/components/landing/AccessCodeForm";
+import AudioPlayer from "@/components/showcase/AudioPlayer";
+import ShowcaseNav from "@/components/showcase/ShowcaseNav";
+import { finalIteration } from "@/components/showcase/iterations";
+import { verdictPullQuote } from "@/components/showcase/verdict";
 import { useReveal } from "@/hooks/useReveal";
 
-const features = [
-  {
-    icon: FileText,
-    title: "Inspectable score",
-    body: "See the symbolic notation the model produces. Edit it. Re-render only what changed.",
-  },
-  {
-    icon: Layers,
-    title: "Voice-level control",
-    body: "Regenerate the bass without touching the melody. Surgical edits, not re-rolls.",
-  },
-  {
-    icon: Award,
-    title: "Patent-pending notation",
-    body: "MusicDSL: a symbolic format purpose-built for AI music. Norwegian patent filed April 2026.",
-  },
+const movements = [
+  { roman: "I", name: "Lointain", note: "Distant — opening atmosphere" },
+  { roman: "II", name: "Cantabile", note: "Singing right hand over sustained bass" },
+  { roman: "III", name: "Plus mouvementé", note: "More animated; cross-pulses build" },
+  { roman: "IV", name: "Éclat", note: "Burst — three-phase growth to a plateau-f peak" },
+  { roman: "V", name: "Retour", note: "Return; recapitulates A B A C in reverse" },
 ];
 
-const scrollToAccess = () => {
-  document.getElementById("access")?.scrollIntoView({ behavior: "smooth", block: "start" });
-};
-
 const Index = () => {
-  const featuresRef = useReveal<HTMLDivElement>();
-  const videoRef = useReveal<HTMLDivElement>();
-  const accessRef = useReveal<HTMLDivElement>();
+  const descRef = useReveal<HTMLDivElement>();
+  const movementsRef = useReveal<HTMLDivElement>();
+  const verdictRef = useReveal<HTMLDivElement>();
+  const ctaRef = useReveal<HTMLDivElement>();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Top nav */}
-      <header className="absolute inset-x-0 top-0 z-30">
-        <nav className="mx-auto flex h-[52px] max-w-6xl items-center justify-between px-6">
-          <a href="/" className="font-serif-display text-xl tracking-tight">
-            Wavelody
-          </a>
-          <a
-            href="mailto:access@wavelody.com"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Request access
-          </a>
-        </nav>
-      </header>
+      <ShowcaseNav
+        rightLink={{ to: "/how-it-was-made", label: "How it was made" }}
+      />
 
       {/* Hero */}
-      <section className="relative flex min-h-[70vh] items-center justify-center px-6 pt-[52px]">
+      <section className="relative flex min-h-[88vh] items-center justify-center px-6 pt-[52px]">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_hsl(173_80%_40%_/_0.08),_transparent_60%)]"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_hsl(173_80%_40%_/_0.10),_transparent_60%)]"
         />
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="font-serif-display text-4xl leading-[1.1] tracking-tight sm:text-5xl md:text-6xl">
-            AI music composition with an editable score.
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            Wavelody showcase
+          </div>
+          <h1 className="font-serif-display text-5xl leading-[1.05] tracking-tight sm:text-6xl md:text-[5rem]">
+            The Living Engine
           </h1>
-          <p className="mx-auto mt-6 max-w-[600px] text-base leading-relaxed text-muted-foreground">
-            Wavelody generates music as a symbolic score the AI can read, you can edit, and
-            the render engine plays back. Every note addressable. Every voice swappable.
-            The structural layer end-to-end audio generators don't have.
+          <p className="mx-auto mt-6 max-w-[640px] text-lg leading-relaxed text-muted-foreground">
+            A Ravel-style piano suite, composed by Wavelody.
           </p>
-          <div className="mt-10">
-            <Button size="lg" onClick={scrollToAccess} className="h-11 px-6">
-              Enter access code
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature strip */}
-      <section className="px-6 py-20">
-        <div
-          ref={featuresRef}
-          className="reveal mx-auto grid max-w-5xl grid-cols-1 gap-10 md:grid-cols-3"
-        >
-          {features.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <Icon className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <h3 className="font-serif-display text-lg tracking-tight">{title}</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Demo video */}
-      <section className="px-6 py-20">
-        <div ref={videoRef} className="reveal mx-auto max-w-4xl">
-          <div className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border/60 bg-card">
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(173_80%_40%_/_0.18),_transparent_70%),linear-gradient(135deg,_hsl(240_20%_8%),_hsl(240_18%_4%))]"
+          <div className="mx-auto mt-10 max-w-xl">
+            <AudioPlayer
+              src={finalIteration.audio}
+              label={`v13 — The Living Engine`}
+              durationHint="6:06"
+              variant="hero"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="font-serif-display text-3xl tracking-tight opacity-90 sm:text-4xl">
-                Wavelody
-              </span>
-            </div>
-            <button
-              type="button"
-              aria-label="Play demo video"
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-background/70 backdrop-blur transition-transform group-hover:scale-105">
-                <Play className="h-6 w-6 translate-x-[1px] fill-foreground text-foreground" />
-              </span>
-            </button>
           </div>
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            60-second demo of the inspectable score and scoped editing.
+          <p className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            Solo piano · F♯ minor · five movements · 6:06
           </p>
         </div>
       </section>
 
-      {/* Access code */}
-      <section id="access" className="px-6 py-20">
-        <div ref={accessRef} className="reveal">
-          <AccessCodeForm />
+      {/* Description */}
+      <section className="px-6 py-20">
+        <div ref={descRef} className="reveal mx-auto max-w-3xl">
+          <h2 className="font-serif-display text-3xl tracking-tight">
+            About the piece
+          </h2>
+          <div className="mt-6 space-y-5 text-base leading-relaxed text-muted-foreground">
+            <p>
+              Five movements, six minutes and six seconds, a single piano in F♯
+              minor. The piece is built from a structured letter pattern —{" "}
+              <span className="font-mono text-foreground">
+                I. Lointain&nbsp;A B A C
+              </span>
+              ,{" "}
+              <span className="font-mono text-foreground">
+                II. Cantabile&nbsp;A B A C&nbsp;D E D F
+              </span>
+              , and so on through{" "}
+              <span className="font-mono text-foreground">V. Retour</span> —
+              with each letter mapped to a fixed pitch (A = F♯4, B = A4, … N =
+              A6). The system then writes the actual music: voicing, harmony,
+              rhythm, dynamics, articulation.
+            </p>
+            <p>
+              The harmonic palette is octatonic with parallel ninths and
+              polychords (D major over F♯ major; A major over C♯ major). The
+              rhythmic surface uses Spanish hemiola, 5:4 and 7:8 cross-pulses
+              to break the mechanical pulse the early drafts could never quite
+              shake. The fourth movement, Éclat, runs a three-phase growth arc
+              — a hushed pulse decay, a fluctuating swell, then a plateau-f
+              peak with sforzandi — which is what gave v13 its name.
+            </p>
+          </div>
+
+          {/* Movement list */}
+          <div ref={movementsRef} className="reveal mt-10 space-y-3">
+            {movements.map((m) => (
+              <div
+                key={m.roman}
+                className="flex items-baseline gap-4 rounded-lg border border-border/60 bg-card/40 px-5 py-4"
+              >
+                <span className="w-8 shrink-0 font-mono text-sm text-muted-foreground">
+                  {m.roman}.
+                </span>
+                <span className="font-serif-display text-lg tracking-tight text-foreground">
+                  {m.name}
+                </span>
+                <span className="text-sm text-muted-foreground">— {m.note}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Verdict pull-quote (Gemini 2.5 Pro) */}
+          <aside
+            ref={verdictRef}
+            data-verdict
+            className="reveal mt-12 rounded-xl border border-primary/30 bg-primary/[0.04] p-6 sm:p-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <Quote className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium uppercase tracking-[0.18em] text-primary/90">
+                  Verdict from Gemini
+                </div>
+                <blockquote className="mt-3 font-serif-display text-lg leading-snug text-foreground sm:text-xl">
+                  &ldquo;{verdictPullQuote.body}&rdquo;
+                </blockquote>
+                <div className="mt-3 text-sm text-muted-foreground">
+                  — {verdictPullQuote.source},{" "}
+                  <span className="text-muted-foreground/85">
+                    {verdictPullQuote.context}
+                  </span>
+                </div>
+                <Link
+                  to="/verdict"
+                  className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-transform hover:translate-x-0.5"
+                >
+                  Read the full assessment
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      {/* CTA — how it was made */}
+      <section className="px-6 pb-24 pt-4">
+        <div ref={ctaRef} className="reveal mx-auto max-w-3xl">
+          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card/80 to-card/40 p-8 text-center md:p-12">
+            <h3 className="font-serif-display text-3xl tracking-tight">
+              Curious how this was made?
+            </h3>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground">
+              Thirteen versions, seven rounds of critique, one engine. Listen
+              to the journey from a literal pattern transcription in v1 to The
+              Living Engine in v13.
+            </p>
+            <div className="mt-8">
+              <Button asChild size="lg" className="h-11 px-6">
+                <Link to="/how-it-was-made">
+                  See the iteration journey
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -139,10 +184,10 @@ const Index = () => {
               ·
             </span>
             <Link
-              to="/showcase"
+              to="/access"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              Listen — The Living Engine
+              Speedrun access
             </Link>
           </div>
           <p className="text-xs text-muted-foreground/70">© 2026 Wavelody.</p>

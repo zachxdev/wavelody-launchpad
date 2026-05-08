@@ -86,13 +86,13 @@ const HowItWasMade = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <ShowcaseNav rightLink={{ to: "/showcase", label: "← Back to showcase" }} />
+      <ShowcaseNav rightLink={{ to: "/", label: "← Back to showcase" }} />
 
       {/* Hero */}
       <section className="relative px-6 pb-12 pt-[100px] sm:pt-[120px]">
         <div className="mx-auto max-w-3xl">
           <Link
-            to="/showcase"
+            to="/"
             className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-3 w-3" />
@@ -156,7 +156,7 @@ const HowItWasMade = () => {
         <div className="mx-auto max-w-3xl">
           <div className="grid gap-4 sm:grid-cols-2">
             <Link
-              to="/showcase"
+              to="/"
               className="group rounded-xl border border-border/60 bg-card/60 p-5 transition-colors hover:border-primary/40"
             >
               <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -170,7 +170,7 @@ const HowItWasMade = () => {
               </div>
             </Link>
             <Link
-              to="/showcase/verdict"
+              to="/verdict"
               className="group rounded-xl border border-primary/40 bg-primary/[0.04] p-5 transition-colors hover:bg-primary/[0.08]"
             >
               <div className="text-xs uppercase tracking-[0.18em] text-primary/90">
