@@ -12,6 +12,8 @@ import LivingEngineIterations from "./pages/LivingEngineIterations.tsx";
 import LivingEngineVerdict from "./pages/LivingEngineVerdict.tsx";
 import WanderingLullaby from "./pages/WanderingLullaby.tsx";
 import WanderingLullabyIterations from "./pages/WanderingLullabyIterations.tsx";
+import TheHiddenHeart from "./pages/TheHiddenHeart.tsx";
+import TheHiddenHeartIterations from "./pages/TheHiddenHeartIterations.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -42,6 +44,13 @@ const App = () => (
           <Route
             path="/the-wandering-lullaby/iterations"
             element={<WanderingLullabyIterations />}
+          />
+
+          {/* Piece III — The Hidden Heart */}
+          <Route path="/the-hidden-heart" element={<TheHiddenHeart />} />
+          <Route
+            path="/the-hidden-heart/iterations"
+            element={<TheHiddenHeartIterations />}
           />
 
           {/* Speedrun-access flow (unchanged) */}

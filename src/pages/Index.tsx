@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import AudioPlayer from "@/components/showcase/AudioPlayer";
 import { finalIteration } from "@/components/showcase/iterations";
 import { lullabyFinalIteration } from "@/components/showcase/lullabyIterations";
+import { serenadeFinalIteration } from "@/components/showcase/serenadeIterations";
 import { useReveal } from "@/hooks/useReveal";
 
 type ShowcaseCard = {
@@ -43,6 +44,19 @@ const cards: ShowcaseCard[] = [
     audioLabel: "v10 (surgical) — The Wandering Lullaby",
     durationHint: "3:26",
     meta: "Solo piano · D major · 5 sections · 3:26",
+    groupKey: "catalog",
+  },
+  {
+    href: "/the-hidden-heart",
+    number: "III",
+    title: "The Hidden Heart",
+    tagline: "An original solo piano love serenade — restrained warmth in F.",
+    description:
+      "F major-pentatonic gōng vocabulary in both hands with a single bar 33 E♭ modal-mixture exception. Restraint as dynamic compression: an mp floor, a single mf bar at the climax. Ten versions, two rejected branches, verifier-enforced pentatonic discipline.",
+    audioSrc: serenadeFinalIteration.audio,
+    audioLabel: "v10 — The Hidden Heart",
+    durationHint: "3:35",
+    meta: "Solo piano · F major · pentatonic discipline · 3:35",
     groupKey: "catalog",
   },
 ];
@@ -128,16 +142,16 @@ const Index = () => {
             Score-first, sound second.
           </h1>
           <p className="mx-auto mt-6 max-w-[640px] text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Two original compositions, both built end-to-end through structured
-            score generation and AI critique. Click in to hear the work — and
-            the process.
+            Three original compositions, each built end-to-end through
+            structured score generation and AI critique. Click in to hear the
+            work — and the process.
           </p>
         </div>
       </section>
 
       {/* Catalog cards */}
       <section className="px-6 pb-20">
-        <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
+        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => (
             <ShowcaseCardView key={card.href} card={card} />
           ))}
