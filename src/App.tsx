@@ -7,8 +7,11 @@ import Index from "./pages/Index.tsx";
 import Access from "./pages/Access.tsx";
 import AuthSuccess from "./pages/AuthSuccess.tsx";
 import Workspace from "./pages/Workspace.tsx";
-import HowItWasMade from "./pages/HowItWasMade.tsx";
-import Verdict from "./pages/Verdict.tsx";
+import LivingEngine from "./pages/LivingEngine.tsx";
+import LivingEngineIterations from "./pages/LivingEngineIterations.tsx";
+import LivingEngineVerdict from "./pages/LivingEngineVerdict.tsx";
+import WanderingLullaby from "./pages/WanderingLullaby.tsx";
+import WanderingLullabyIterations from "./pages/WanderingLullabyIterations.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -20,22 +23,53 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Catalog landing */}
           <Route path="/" element={<Index />} />
+
+          {/* Piece I — The Living Engine */}
+          <Route path="/the-living-engine" element={<LivingEngine />} />
+          <Route
+            path="/the-living-engine/iterations"
+            element={<LivingEngineIterations />}
+          />
+          <Route
+            path="/the-living-engine/verdict"
+            element={<LivingEngineVerdict />}
+          />
+
+          {/* Piece II — The Wandering Lullaby */}
+          <Route path="/the-wandering-lullaby" element={<WanderingLullaby />} />
+          <Route
+            path="/the-wandering-lullaby/iterations"
+            element={<WanderingLullabyIterations />}
+          />
+
+          {/* Speedrun-access flow (unchanged) */}
           <Route path="/access" element={<Access />} />
           <Route path="/auth-success" element={<AuthSuccess />} />
           <Route path="/app" element={<Workspace />} />
-          <Route path="/how-it-was-made" element={<HowItWasMade />} />
-          <Route path="/verdict" element={<Verdict />} />
-          {/* Legacy /showcase/* paths — redirect to the new locations */}
-          <Route path="/showcase" element={<Navigate to="/" replace />} />
+
+          {/* Legacy URL redirects — pre-catalog single-piece structure */}
+          <Route
+            path="/how-it-was-made"
+            element={<Navigate to="/the-living-engine/iterations" replace />}
+          />
+          <Route
+            path="/verdict"
+            element={<Navigate to="/the-living-engine/verdict" replace />}
+          />
+
+          {/* Legacy /showcase/* paths — predate the catalog */}
+          <Route path="/showcase" element={<Navigate to="/the-living-engine" replace />} />
           <Route
             path="/showcase/how-it-was-made"
-            element={<Navigate to="/how-it-was-made" replace />}
+            element={<Navigate to="/the-living-engine/iterations" replace />}
           />
           <Route
             path="/showcase/verdict"
-            element={<Navigate to="/verdict" replace />}
+            element={<Navigate to="/the-living-engine/verdict" replace />}
           />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

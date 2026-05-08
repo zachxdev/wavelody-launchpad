@@ -57,7 +57,7 @@ const Cell = ({ text, emphasis }: { text: string; emphasis?: boolean }) => {
   );
 };
 
-const Verdict = () => {
+const LivingEngineVerdict = () => {
   const introRef = useReveal<HTMLDivElement>();
   const sec1Ref = useReveal<HTMLDivElement>();
   const sec2Ref = useReveal<HTMLDivElement>();
@@ -66,13 +66,13 @@ const Verdict = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <ShowcaseNav rightLink={{ to: "/", label: "← Back to showcase" }} />
+      <ShowcaseNav rightLink={{ to: "/the-living-engine", label: "← Listening page" }} />
 
       {/* Hero */}
       <section className="relative px-6 pb-10 pt-[100px] sm:pt-[120px]">
         <div className="mx-auto max-w-3xl">
           <Link
-            to="/"
+            to="/the-living-engine"
             className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-3 w-3" />
@@ -406,7 +406,7 @@ const Verdict = () => {
         <div className="mx-auto max-w-3xl">
           <div className="grid gap-4 sm:grid-cols-2">
             <Link
-              to="/"
+              to="/the-living-engine"
               className="group rounded-xl border border-border/60 bg-card/60 p-5 transition-colors hover:border-primary/40"
             >
               <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -420,7 +420,7 @@ const Verdict = () => {
               </div>
             </Link>
             <Link
-              to="/how-it-was-made"
+              to="/the-living-engine/iterations"
               className="group rounded-xl border border-border/60 bg-card/60 p-5 transition-colors hover:border-primary/40"
             >
               <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -446,4 +446,4 @@ const Verdict = () => {
   );
 };
 
-export default Verdict;
+export default LivingEngineVerdict;

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 type Props = {
-  rightLink: { to: string; label: string };
+  rightLink?: { to: string; label: string };
 };
 
 const ShowcaseNav = ({ rightLink }: Props) => {
@@ -11,12 +11,14 @@ const ShowcaseNav = ({ rightLink }: Props) => {
         <Link to="/" className="font-serif-display text-xl tracking-tight">
           Wavelody
         </Link>
-        <Link
-          to={rightLink.to}
-          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {rightLink.label}
-        </Link>
+        {rightLink && (
+          <Link
+            to={rightLink.to}
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {rightLink.label}
+          </Link>
+        )}
       </nav>
     </header>
   );

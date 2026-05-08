@@ -1,172 +1,146 @@
-import { ArrowRight, Quote } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import AudioPlayer from "@/components/showcase/AudioPlayer";
-import ShowcaseNav from "@/components/showcase/ShowcaseNav";
 import { finalIteration } from "@/components/showcase/iterations";
-import { verdictPullQuote } from "@/components/showcase/verdict";
+import { lullabyFinalIteration } from "@/components/showcase/lullabyIterations";
 import { useReveal } from "@/hooks/useReveal";
 
-const movements = [
-  { roman: "I", name: "Lointain", note: "Distant — opening atmosphere" },
-  { roman: "II", name: "Cantabile", note: "Singing right hand over sustained bass" },
-  { roman: "III", name: "Plus mouvementé", note: "More animated; cross-pulses build" },
-  { roman: "IV", name: "Éclat", note: "Burst — three-phase growth to a plateau-f peak" },
-  { roman: "V", name: "Retour", note: "Return; recapitulates A B A C in reverse" },
+type ShowcaseCard = {
+  href: string;
+  number: string;
+  title: string;
+  tagline: string;
+  description: string;
+  audioSrc: string;
+  audioLabel: string;
+  durationHint: string;
+  meta: string;
+  groupKey: string;
+};
+
+const cards: ShowcaseCard[] = [
+  {
+    href: "/the-living-engine",
+    number: "I",
+    title: "The Living Engine",
+    tagline: "A Ravel-style piano suite — five movements in F♯ minor.",
+    description:
+      "Built from a 31-letter macro pattern. Octatonic harmony, 5:4 and 7:8 cross-pulses, a three-phase growth arc in Mvt IV. Thirteen versions, seven Gemini critique rounds.",
+    audioSrc: finalIteration.audio,
+    audioLabel: "v13 — The Living Engine",
+    durationHint: "6:06",
+    meta: "Solo piano · F♯ minor · 5 movements · 6:06",
+    groupKey: "catalog",
+  },
+  {
+    href: "/the-wandering-lullaby",
+    number: "II",
+    title: "The Wandering Lullaby",
+    tagline: "An original lyrical-fantasy piano medley in D-major orbit.",
+    description:
+      "Five sections — Lullaby, Woodland Dance, Celestial, Lyrical Ballad, Reprise — architected before any note was composed. Ten versions, nine Gemini rounds, one surgical final cut.",
+    audioSrc: lullabyFinalIteration.audio,
+    audioLabel: "v10 (surgical) — The Wandering Lullaby",
+    durationHint: "3:26",
+    meta: "Solo piano · D major · 5 sections · 3:26",
+    groupKey: "catalog",
+  },
 ];
 
+const ShowcaseCardView = ({ card }: { card: ShowcaseCard }) => {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <article
+      ref={ref}
+      className="reveal group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-7 transition-colors hover:border-primary/40 sm:p-8"
+    >
+      <div className="flex items-baseline gap-3">
+        <span className="font-mono text-xs uppercase tracking-[0.18em] text-primary/90">
+          Piece {card.number}
+        </span>
+      </div>
+      <h2 className="mt-3 font-serif-display text-3xl leading-tight tracking-tight text-foreground sm:text-[2.5rem]">
+        {card.title}
+      </h2>
+      <p className="mt-3 text-base leading-relaxed text-foreground/90">
+        {card.tagline}
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+        {card.description}
+      </p>
+
+      <div className="mt-6">
+        <AudioPlayer
+          src={card.audioSrc}
+          label={card.audioLabel}
+          durationHint={card.durationHint}
+          groupKey={card.groupKey}
+        />
+        <p className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          {card.meta}
+        </p>
+      </div>
+
+      <div className="mt-7 flex flex-1 items-end">
+        <Link
+          to={card.href}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-transform hover:translate-x-0.5"
+        >
+          Open
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    </article>
+  );
+};
+
 const Index = () => {
-  const descRef = useReveal<HTMLDivElement>();
-  const movementsRef = useReveal<HTMLDivElement>();
-  const verdictRef = useReveal<HTMLDivElement>();
-  const ctaRef = useReveal<HTMLDivElement>();
+  const introRef = useReveal<HTMLDivElement>();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <ShowcaseNav
-        rightLink={{ to: "/how-it-was-made", label: "How it was made" }}
-      />
+      <header className="absolute inset-x-0 top-0 z-30">
+        <nav className="mx-auto flex h-[52px] max-w-6xl items-center justify-between px-6">
+          <Link to="/" className="font-serif-display text-xl tracking-tight">
+            Wavelody
+          </Link>
+          <Link
+            to="/access"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Speedrun access
+          </Link>
+        </nav>
+      </header>
 
-      {/* Hero */}
-      <section className="relative flex min-h-[88vh] items-center justify-center px-6 pt-[52px]">
+      {/* Hero / framing */}
+      <section className="relative px-6 pb-12 pt-[112px] sm:pt-[140px]">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_hsl(173_80%_40%_/_0.10),_transparent_60%)]"
         />
-        <div className="mx-auto max-w-3xl text-center">
+        <div ref={introRef} className="reveal mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Wavelody showcase
+            Wavelody — showcase
           </div>
-          <h1 className="font-serif-display text-5xl leading-[1.05] tracking-tight sm:text-6xl md:text-[5rem]">
-            The Living Engine
+          <h1 className="font-serif-display text-5xl leading-[1.05] tracking-tight sm:text-6xl">
+            Score-first, sound second.
           </h1>
-          <p className="mx-auto mt-6 max-w-[640px] text-lg leading-relaxed text-muted-foreground">
-            A Ravel-style piano suite, composed by Wavelody.
-          </p>
-          <div className="mx-auto mt-10 max-w-xl">
-            <AudioPlayer
-              src={finalIteration.audio}
-              label={`v13 — The Living Engine`}
-              durationHint="6:06"
-              variant="hero"
-            />
-          </div>
-          <p className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            Solo piano · F♯ minor · five movements · 6:06
+          <p className="mx-auto mt-6 max-w-[640px] text-base leading-relaxed text-muted-foreground sm:text-lg">
+            Two original compositions, both built end-to-end through structured
+            score generation and AI critique. Click in to hear the work — and
+            the process.
           </p>
         </div>
       </section>
 
-      {/* Description */}
-      <section className="px-6 py-20">
-        <div ref={descRef} className="reveal mx-auto max-w-3xl">
-          <h2 className="font-serif-display text-3xl tracking-tight">
-            About the piece
-          </h2>
-          <div className="mt-6 space-y-5 text-base leading-relaxed text-muted-foreground">
-            <p>
-              Five movements, six minutes and six seconds, a single piano in F♯
-              minor. The piece is built from a structured letter pattern —{" "}
-              <span className="font-mono text-foreground">
-                I. Lointain&nbsp;A B A C
-              </span>
-              ,{" "}
-              <span className="font-mono text-foreground">
-                II. Cantabile&nbsp;A B A C&nbsp;D E D F
-              </span>
-              , and so on through{" "}
-              <span className="font-mono text-foreground">V. Retour</span> —
-              with each letter mapped to a fixed pitch (A = F♯4, B = A4, … N =
-              A6). The system then writes the actual music: voicing, harmony,
-              rhythm, dynamics, articulation.
-            </p>
-            <p>
-              The harmonic palette is octatonic with parallel ninths and
-              polychords (D major over F♯ major; A major over C♯ major). The
-              rhythmic surface uses Spanish hemiola, 5:4 and 7:8 cross-pulses
-              to break the mechanical pulse the early drafts could never quite
-              shake. The fourth movement, Éclat, runs a three-phase growth arc
-              — a hushed pulse decay, a fluctuating swell, then a plateau-f
-              peak with sforzandi — which is what gave v13 its name.
-            </p>
-          </div>
-
-          {/* Movement list */}
-          <div ref={movementsRef} className="reveal mt-10 space-y-3">
-            {movements.map((m) => (
-              <div
-                key={m.roman}
-                className="flex items-baseline gap-4 rounded-lg border border-border/60 bg-card/40 px-5 py-4"
-              >
-                <span className="w-8 shrink-0 font-mono text-sm text-muted-foreground">
-                  {m.roman}.
-                </span>
-                <span className="font-serif-display text-lg tracking-tight text-foreground">
-                  {m.name}
-                </span>
-                <span className="text-sm text-muted-foreground">— {m.note}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Verdict pull-quote (Gemini 2.5 Pro) */}
-          <aside
-            ref={verdictRef}
-            data-verdict
-            className="reveal mt-12 rounded-xl border border-primary/30 bg-primary/[0.04] p-6 sm:p-8"
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <Quote className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium uppercase tracking-[0.18em] text-primary/90">
-                  Verdict from Gemini
-                </div>
-                <blockquote className="mt-3 font-serif-display text-lg leading-snug text-foreground sm:text-xl">
-                  &ldquo;{verdictPullQuote.body}&rdquo;
-                </blockquote>
-                <div className="mt-3 text-sm text-muted-foreground">
-                  — {verdictPullQuote.source},{" "}
-                  <span className="text-muted-foreground/85">
-                    {verdictPullQuote.context}
-                  </span>
-                </div>
-                <Link
-                  to="/verdict"
-                  className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-transform hover:translate-x-0.5"
-                >
-                  Read the full assessment
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      {/* CTA — how it was made */}
-      <section className="px-6 pb-24 pt-4">
-        <div ref={ctaRef} className="reveal mx-auto max-w-3xl">
-          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card/80 to-card/40 p-8 text-center md:p-12">
-            <h3 className="font-serif-display text-3xl tracking-tight">
-              Curious how this was made?
-            </h3>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground">
-              Thirteen versions, seven rounds of critique, one engine. Listen
-              to the journey from a literal pattern transcription in v1 to The
-              Living Engine in v13.
-            </p>
-            <div className="mt-8">
-              <Button asChild size="lg" className="h-11 px-6">
-                <Link to="/how-it-was-made">
-                  See the iteration journey
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
+      {/* Catalog cards */}
+      <section className="px-6 pb-20">
+        <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
+          {cards.map((card) => (
+            <ShowcaseCardView key={card.href} card={card} />
+          ))}
         </div>
       </section>
 
