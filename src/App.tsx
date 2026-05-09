@@ -14,6 +14,8 @@ import WanderingLullaby from "./pages/WanderingLullaby.tsx";
 import WanderingLullabyIterations from "./pages/WanderingLullabyIterations.tsx";
 import TheHiddenHeart from "./pages/TheHiddenHeart.tsx";
 import TheHiddenHeartIterations from "./pages/TheHiddenHeartIterations.tsx";
+import TheHiddenHeartClassical from "./pages/TheHiddenHeartClassical.tsx";
+import TheHiddenHeartModernAsian from "./pages/TheHiddenHeartModernAsian.tsx";
 import SkyCombat from "./pages/SkyCombat.tsx";
 import SkyCombatIterations from "./pages/SkyCombatIterations.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -53,6 +55,14 @@ const App = () => (
           <Route
             path="/the-hidden-heart/iterations"
             element={<TheHiddenHeartIterations />}
+          />
+          <Route
+            path="/the-hidden-heart/classical-orchestra"
+            element={<TheHiddenHeartClassical />}
+          />
+          <Route
+            path="/the-hidden-heart/modern-asian-orchestra"
+            element={<TheHiddenHeartModernAsian />}
           />
 
           {/* Piece IV — Sky Combat */}

@@ -18,6 +18,7 @@ type ShowcaseCard = {
   durationHint: string;
   meta: string;
   groupKey: string;
+  footnote?: string;
 };
 
 const cards: ShowcaseCard[] = [
@@ -59,6 +60,7 @@ const cards: ShowcaseCard[] = [
     durationHint: "3:35",
     meta: "Solo piano · F major · pentatonic discipline · 3:35",
     groupKey: "catalog",
+    footnote: "Now also as orchestral arrangements — Classical and Modern Asian.",
   },
   {
     href: "/sky-combat",
@@ -108,6 +110,12 @@ const ShowcaseCardView = ({ card }: { card: ShowcaseCard }) => {
           {card.meta}
         </p>
       </div>
+
+      {card.footnote && (
+        <p className="mt-4 text-xs italic text-muted-foreground/80">
+          {card.footnote}
+        </p>
+      )}
 
       <div className="mt-7 flex flex-1 items-end">
         <Link
