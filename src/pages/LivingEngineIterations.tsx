@@ -56,6 +56,15 @@ const TimelineCard = ({
 
         <div className="space-y-5 px-5 py-5 sm:px-6 sm:py-6">
           <AudioPlayer src={iter.audio} label={`${iter.id} — ${iter.title}`} />
+          {isFinal && (
+            <Link
+              to="/the-living-engine"
+              className="inline-flex items-center gap-1 text-xs italic text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Listen in Pianoteq
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          )}
 
           <div className="grid gap-5 md:grid-cols-2">
             <div>

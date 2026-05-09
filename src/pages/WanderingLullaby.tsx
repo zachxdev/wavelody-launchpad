@@ -5,7 +5,6 @@ import AudioPlayer from "@/components/showcase/AudioPlayer";
 import ShowcaseNav from "@/components/showcase/ShowcaseNav";
 import LullabyBlueprint from "@/components/showcase/LullabyBlueprint";
 import VerdictCallout from "@/components/showcase/VerdictCallout";
-import { lullabyFinalIteration } from "@/components/showcase/lullabyIterations";
 import { useReveal } from "@/hooks/useReveal";
 
 const sections = [
@@ -54,11 +53,14 @@ const WanderingLullaby = () => {
           </p>
           <div className="mx-auto mt-10 max-w-xl">
             <AudioPlayer
-              src={lullabyFinalIteration.audio}
+              src="/showcase/lullaby/v10-pianoteq.mp3"
               label="v10 (surgical) — The Wandering Lullaby"
               durationHint="3:26"
               variant="hero"
             />
+            <p className="mt-3 text-xs italic text-muted-foreground/80">
+              Rendered with Pianoteq 9 physical-modeling engine (Hamburg Steinway D).
+            </p>
           </div>
           <p className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             Solo piano · D major · 60 bars at q=72 · 865 notes · 3:26

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import AudioPlayer from "@/components/showcase/AudioPlayer";
 import ShowcaseNav from "@/components/showcase/ShowcaseNav";
 import SerenadeBlueprint from "@/components/showcase/SerenadeBlueprint";
-import { serenadeFinalIteration } from "@/components/showcase/serenadeIterations";
 import { useReveal } from "@/hooks/useReveal";
 
 const sections: Array<{ letter: string; name: string; note: string }> = [
@@ -55,11 +54,14 @@ const TheHiddenHeart = () => {
           </p>
           <div className="mx-auto mt-10 max-w-xl">
             <AudioPlayer
-              src={serenadeFinalIteration.audio}
+              src="/showcase/serenade/v10-pianoteq.mp3"
               label="v10 — The Hidden Heart"
               durationHint="3:35"
               variant="hero"
             />
+            <p className="mt-3 text-xs italic text-muted-foreground/80">
+              Rendered with Pianoteq 9 physical-modeling engine (Hamburg Steinway D).
+            </p>
           </div>
           <p className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             Solo piano · F major · 54 bars at q=62 · 3:35

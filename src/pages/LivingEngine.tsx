@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AudioPlayer from "@/components/showcase/AudioPlayer";
 import ShowcaseNav from "@/components/showcase/ShowcaseNav";
-import { finalIteration } from "@/components/showcase/iterations";
 import { verdictPullQuote } from "@/components/showcase/verdict";
 import { useReveal } from "@/hooks/useReveal";
 
@@ -53,11 +52,14 @@ const LivingEngine = () => {
           </p>
           <div className="mx-auto mt-10 max-w-xl">
             <AudioPlayer
-              src={finalIteration.audio}
+              src="/showcase/v13-pianoteq.mp3"
               label={`v13 — The Living Engine`}
               durationHint="6:06"
               variant="hero"
             />
+            <p className="mt-3 text-xs italic text-muted-foreground/80">
+              Rendered with Pianoteq 9 physical-modeling engine (Hamburg Steinway D).
+            </p>
           </div>
           <p className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             Solo piano · F♯ minor · five movements · 6:06
