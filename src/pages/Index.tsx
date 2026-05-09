@@ -4,6 +4,7 @@ import AudioPlayer from "@/components/showcase/AudioPlayer";
 import { finalIteration } from "@/components/showcase/iterations";
 import { lullabyFinalIteration } from "@/components/showcase/lullabyIterations";
 import { serenadeFinalIteration } from "@/components/showcase/serenadeIterations";
+import { skyCombatFinalIteration } from "@/components/showcase/skyCombatIterations";
 import { useReveal } from "@/hooks/useReveal";
 
 type ShowcaseCard = {
@@ -57,6 +58,19 @@ const cards: ShowcaseCard[] = [
     audioLabel: "v10 — The Hidden Heart",
     durationHint: "3:35",
     meta: "Solo piano · F major · pentatonic discipline · 3:35",
+    groupKey: "catalog",
+  },
+  {
+    href: "/sky-combat",
+    number: "IV",
+    title: "Sky Combat",
+    tagline: "An original virtuosic piano piece in the aerial-combat tradition.",
+    description:
+      "B minor / B major modal mixture, 160 BPM, 120 bars, ~3066 notes. Mazeppa parallel thirds, Rachmaninoff broken-chord storms, Islamey machine-gun drumming, hand cross-overs as dramatic punctuation. Eight versions, six Gemini critique rounds, two pivotal human-driven surgical fixes.",
+    audioSrc: skyCombatFinalIteration.audio,
+    audioLabel: "v8 — Sky Combat",
+    durationHint: "3:02",
+    meta: "Solo piano · B minor / B major · 120 bars at 160 BPM · 3:02",
     groupKey: "catalog",
   },
 ];
@@ -142,7 +156,7 @@ const Index = () => {
             Score-first, sound second.
           </h1>
           <p className="mx-auto mt-6 max-w-[640px] text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Three original compositions, each built end-to-end through
+            Four original compositions, each built end-to-end through
             structured score generation and AI critique. Click in to hear the
             work — and the process.
           </p>

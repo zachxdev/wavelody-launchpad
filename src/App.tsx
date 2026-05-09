@@ -14,6 +14,8 @@ import WanderingLullaby from "./pages/WanderingLullaby.tsx";
 import WanderingLullabyIterations from "./pages/WanderingLullabyIterations.tsx";
 import TheHiddenHeart from "./pages/TheHiddenHeart.tsx";
 import TheHiddenHeartIterations from "./pages/TheHiddenHeartIterations.tsx";
+import SkyCombat from "./pages/SkyCombat.tsx";
+import SkyCombatIterations from "./pages/SkyCombatIterations.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -51,6 +53,13 @@ const App = () => (
           <Route
             path="/the-hidden-heart/iterations"
             element={<TheHiddenHeartIterations />}
+          />
+
+          {/* Piece IV — Sky Combat */}
+          <Route path="/sky-combat" element={<SkyCombat />} />
+          <Route
+            path="/sky-combat/iterations"
+            element={<SkyCombatIterations />}
           />
 
           {/* Speedrun-access flow (unchanged) */}
