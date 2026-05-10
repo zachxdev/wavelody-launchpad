@@ -12,107 +12,90 @@ const masters: Record<
   { src: string; label: string; blurb: string }
 > = {
   studio: {
-    src: "/showcase/modal-wind/studio.mp3",
-    label: "Studio master — Colors of the Modal Wind",
+    src: "/showcase/kpop-3-4-style/studio.mp3",
+    label: "Studio master — 3!4! Style",
     blurb:
       "Tighter dynamic range, polished for casual listening on earbuds and laptop speakers.",
   },
   concert: {
-    src: "/showcase/modal-wind/concert.mp3",
-    label: "Concert master — Colors of the Modal Wind",
+    src: "/showcase/kpop-3-4-style/concert.mp3",
+    label: "Concert master — 3!4! Style",
     blurb:
       "Wider dynamic range — ideal for studio monitors or a quiet room with headphones.",
   },
 };
 
-const constraints: Array<{ voice: string; rule: string }> = [
+const styleParts: Array<{ part: string; rule: string }> = [
   {
-    voice: "Oboe",
+    part: "Melody",
     rule:
-      "Carries the lyric singing line. No literal repetition allowed — every phrase must develop.",
+      "Composed by Claude under the style template's contour and rhythmic conventions. Free-write inside a tight per-section spec.",
   },
   {
-    voice: "Double Bass",
+    part: "Chord track",
     rule:
-      "Harmonic anchor — the only voice in the ensemble permitted to use repeated patterns.",
+      "K-pop-idiomatic progressions including harmonic substitutions — bVI on the bridge, the surprise that earns the chorus return.",
   },
   {
-    voice: "Piano LH",
+    part: "Accompaniment",
     rule:
-      "Always a 4-key chord (block press or rapid cascade). No two-note shells, no single notes.",
+      "Derived algorithmically from the chord track — bass, pad, arpeggiator, lead voicings all read the chord track rather than being free-composed.",
   },
   {
-    voice: "Piano RH",
+    part: "Drums",
     rule:
-      "Strictly alternates between 4-key and 3-key chords. Density is patterned, harmony is not.",
+      "Dilla-style snare push (slight backbeat displacement) layered against a straight kick grid. Sidechain ducking pulls the pad under the kick for the breathing effect.",
   },
   {
-    voice: "Piano LH+RH combinations",
+    part: "Banjeon edits",
     rule:
-      "π-distribution rule — adjacent uses of any combination must be ≥ 4 bars apart, and no 4-event sequence may recur.",
-  },
-  {
-    voice: "Flute",
-    rule:
-      "Highlights at the agent's discretion — but silent at the chorus reprise downbeat (bar 45). The implied breath before flooding back.",
-  },
-  {
-    voice: "Clarinet (added v3)",
-    rule:
-      "Warm middle-register support. Silent at INTRO, DROP, and CODA — only colors the body of the piece.",
+      "반전 — Korean for 'reversal / surprise'. Thirteen banjeon edits per Gemini's critique of v3: section transitions, unexpected accents, brief drop-outs that earn the next section.",
   },
 ];
 
 const versions: Array<{ tag: string; title: string; body: string }> = [
   {
     tag: "v1",
-    title: "Rule-based composition (~18 min compose)",
+    title: "Decomposed style template",
     body:
-      "Strict-rule scaffold produces a working ballad in D Aeolian. Gemini critique: 'brilliant orchestration of a chord progression — but not yet a living, breathing song.'",
+      "First pass under the new template architecture — melody from Claude, accompaniment derived algorithmically from the chord track. Working draft of the form.",
   },
   {
     tag: "v2",
-    title: "Gemini-revised — emotional commitment",
+    title: "Lead + pad voicing pass",
     body:
-      "Adds a textural valley DROP section, a driving PRE-CHORUS BUILD anacrusis, and a bar 41 climax with full sustain pedal and flute D7 doubling. +1 minute total length.",
+      "Refined lead synth voicings; pad voicings widened in the chorus, narrowed in the verse. First Dilla-style snare push experiments.",
   },
   {
     tag: "v3",
-    title: "Clarinet added, flute expanded",
+    title: "Section-shape commitments",
     body:
-      "Warm clarinet middle-register lines, eighteen sustained flute lines, and the 'highlight by absence' moment at bar 45 — flute drops out at the chorus reprise downbeat.",
+      "Pre-chorus → chorus build clarified; bridge harmonic motion locked. Gemini critique: 'sections sound the same — nothing surprising happens.'",
   },
   {
     tag: "v4",
-    title: "Realism filter introduced",
+    title: "Thirteen banjeon edits",
     body:
-      "Per-note jitter across five dimensions (timing, velocity, duration, pitch, CC11 noise), π-distributed and phase-decorrelated per voice. Resolves the 'MIDI feel' criticism.",
+      "Thirteen 반전 (surprise) edits at the section seams and within the chorus. Drop-outs, unexpected accents, harmonic substitutions including a bVI on the bridge.",
   },
   {
     tag: "v5",
-    title: "Studio-ready dual master",
+    title: "Mix + sidechain pass",
     body:
-      "Realism strength tuned to 1.5. Two final masters emit from one render — a studio cut for casual listening and a concert cut for monitors.",
+      "Sidechain ducking pulls the pad under the kick — the breathing effect that defines modern K-pop production. Bass tucked in, lead brought forward.",
   },
   {
     tag: "v6",
-    title: "Voicing + balance pass",
-    body:
-      "Refined chord voicings in the piano LH cascades; cleaner separation between oboe lyric and clarinet support; bar 41 climax weighted toward the flute D7 doubling rather than the brass-substitute clarinet.",
-  },
-  {
-    tag: "v7",
     title: "Final master",
     body:
-      "Final realism + mixing pass on both studio and concert cuts. Stable reference render for the constraint-prompted ballad.",
+      "Final realism + mixing pass on both studio and concert cuts. Stable reference render for the decomposed-template piece.",
   },
 ];
 
-const ModalWind = () => {
+const KpopThreeFourStyle = () => {
   const heroRef = useReveal<HTMLDivElement>();
   const descRef = useReveal<HTMLDivElement>();
-  const constraintsRef = useReveal<HTMLDivElement>();
-  const codeRef = useReveal<HTMLDivElement>();
+  const partsRef = useReveal<HTMLDivElement>();
   const whyRef = useReveal<HTMLDivElement>();
   const iterationsRef = useReveal<HTMLDivElement>();
 
@@ -139,15 +122,15 @@ const ModalWind = () => {
           </Link>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Wavelody showcase · piece V · constraint-prompted
+            Wavelody showcase · piece VII · decomposed style template
           </div>
           <h1 className="font-serif-display text-5xl leading-[1.05] tracking-tight sm:text-6xl md:text-[5rem]">
-            Colors of the Modal Wind
+            3!4! Style
           </h1>
           <p className="mx-auto mt-6 max-w-[640px] text-lg leading-relaxed text-muted-foreground">
-            The first showcase composed entirely under strict compositional
-            rules. We didn't ask the LLM to compose freely — we gave it a rule
-            set, and let the rules do half the creative work.
+            A K-pop production built from a decomposed style template — the
+            melody is freely composed by Claude, the accompaniment is derived
+            algorithmically from the chord track.
           </p>
 
           <div className="mx-auto mt-10 max-w-xl">
@@ -182,16 +165,16 @@ const ModalWind = () => {
               key={active}
               src={master.src}
               label={master.label}
-              durationHint="3:58"
+              durationHint="2:55"
               variant="hero"
-              groupKey="modal-wind-hero"
+              groupKey="three-four-style-hero"
             />
             <p className="mt-3 text-xs italic text-muted-foreground/80">
               {master.blurb}
             </p>
           </div>
           <p className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            Oboe · double bass · piano · flute · clarinet · D Aeolian · 3:58
+            Synth lead · pad · bass · drums · K-pop production · 2:55
           </p>
         </div>
       </section>
@@ -204,50 +187,50 @@ const ModalWind = () => {
           </h2>
           <div className="mt-6 space-y-5 text-base leading-relaxed text-muted-foreground">
             <p>
-              An original chamber ballad in D Aeolian — oboe-led melody over
-              piano, double bass, flute, and clarinet. Through-composed with a
-              textural valley DROP, a driving pre-chorus anacrusis, and a bar
-              41 climax that opens into a chorus reprise via the "implied
-              breath" at bar 45.
+              A 2:55 K-pop production in the modern radio template — verse,
+              pre-chorus build, chorus, post-chorus hook, bridge, final
+              chorus. The thing this piece demonstrates isn't the result so
+              much as the <em>architecture</em> behind it.
             </p>
             <p>
-              The thing that makes this piece different from the four catalog
-              showcases isn't its harmony or its instrumentation — it's the
-              method. Every voice was bound by an explicit compositional rule
-              before the LLM wrote a single note. The rules are not advice in
-              a prompt; they are scaffolding the composer cannot escape from.
+              The genre is decomposed into parts the LLM is good at (melodic
+              shape, lyric phrasing, dramatic structure) and parts an
+              algorithm is better at (chord-driven accompaniment, sidechained
+              pad voicings, bass placement). Each part is solved by the tool
+              that fits. The whole is greater than what either could do
+              alone.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Constraints — the headline story */}
+      {/* Style template parts */}
       <section className="px-6 pb-20">
-        <div ref={constraintsRef} className="reveal mx-auto max-w-4xl">
+        <div ref={partsRef} className="reveal mx-auto max-w-4xl">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary/90">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            The rule set
+            The decomposition
           </div>
           <h2 className="font-serif-display text-3xl tracking-tight md:text-4xl">
-            Constraint prompting, voice by voice
+            What Claude composed, what the algorithm derived
           </h2>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Each instrument is governed by a strict rule. The composer chooses
-            <em> what </em>to play within the rule's frame; the rule decides
-            the kind of role the voice can take.
+            Each row is a part of the production. The rule decides whether
+            Claude writes it freely or whether the algorithm reads the chord
+            track and emits it deterministically.
           </p>
 
           <div className="mt-8 space-y-3">
-            {constraints.map((c) => (
+            {styleParts.map((p) => (
               <div
-                key={c.voice}
+                key={p.part}
                 className="flex flex-col gap-1 rounded-lg border border-border/60 bg-card/40 px-5 py-4 sm:flex-row sm:items-baseline sm:gap-5"
               >
-                <span className="w-56 shrink-0 font-mono text-sm uppercase tracking-[0.12em] text-foreground">
-                  {c.voice}
+                <span className="w-40 shrink-0 font-mono text-sm uppercase tracking-[0.12em] text-foreground">
+                  {p.part}
                 </span>
                 <span className="text-sm leading-relaxed text-muted-foreground">
-                  {c.rule}
+                  {p.rule}
                 </span>
               </div>
             ))}
@@ -255,79 +238,44 @@ const ModalWind = () => {
         </div>
       </section>
 
-      {/* Code-block visualization */}
-      <section className="px-6 pb-20">
-        <div ref={codeRef} className="reveal mx-auto max-w-4xl">
-          <div className="rounded-xl border border-border/60 bg-card/70 p-6 md:p-8">
-            <div className="mb-3 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-muted-foreground">
-              <span className="h-2 w-2 rounded-full bg-red-400/70" />
-              <span className="h-2 w-2 rounded-full bg-yellow-400/70" />
-              <span className="h-2 w-2 rounded-full bg-green-400/70" />
-              <span className="ml-2">rules.py</span>
-            </div>
-            <pre className="overflow-x-auto font-mono text-[13px] leading-relaxed text-foreground/90">
-{`RULES = {
-    "oboe":          "lyric melody, no literal repetition",
-    "double_bass":   "harmonic anchor, REPEATED PATTERNS ALLOWED (only voice)",
-    "piano_lh":      "always 4-key chord (block or cascade)",
-    "piano_rh":      "alternate 4-key and 3-key chords",
-    "piano_combos":  "pi-distribution: no clusters, no patterned recurrence",
-    "flute":         "highlights + strategic absence at bar 45 (implied breath)",
-    "clarinet":      "warm middle support, silent at INTRO/DROP/CODA",
-}`}
-            </pre>
-          </div>
-        </div>
-      </section>
-
-      {/* Why constraint prompting matters */}
+      {/* Why decomposed templates matter */}
       <section className="px-6 pb-20">
         <div ref={whyRef} className="reveal mx-auto max-w-3xl">
           <h2 className="font-serif-display text-3xl tracking-tight">
-            Why constraint prompting matters
+            Why decomposed templates matter
           </h2>
           <div className="mt-6 space-y-5 text-base leading-relaxed text-muted-foreground">
             <p>
-              <span className="font-medium text-foreground">Speedup.</span>{" "}
-              Rule-based composition cut Claude's compose time roughly in half
-              compared with the unconstrained Tier-D pieces in the catalog.
-              The rules absorb the dimensions of the decision space that don't
-              matter for the piece's identity, so the model concentrates its
-              budget on the dimensions that do.
+              <span className="font-medium text-foreground">Genre fidelity.</span>{" "}
+              An LLM asked to write K-pop end-to-end produces a passable
+              imitation. An LLM asked to compose only the melody, while the
+              accompaniment is derived from a chord track via genre-specific
+              rules, produces a piece that <em>sits in the genre</em>. The
+              decomposition encodes what the genre demands and gives Claude
+              the freedom to be creative inside that frame.
+            </p>
+            <p>
+              <span className="font-medium text-foreground">Banjeon, not Beyer.</span>{" "}
+              Korean producers talk about{" "}
+              <span className="font-mono text-foreground">반전</span> —
+              reversal, surprise, the moment the song flips. Gemini's critique
+              of v3 was 'sections sound the same — nothing surprising
+              happens'. Thirteen banjeon edits later, the piece earns its
+              chorus returns.
             </p>
             <p>
               <span className="font-medium text-foreground">
-                Style consistency.
+                Reproducibility across pieces.
               </span>{" "}
-              The rules guarantee a coherent aesthetic — no Beyer-style
-              mechanical variety, no genre drift. Two compositions written
-              under the same rule set sit recognizably in the same world even
-              though their melodies are unrelated.
-            </p>
-            <p>
-              <span className="font-medium text-foreground">
-                Reproducibility.
-              </span>{" "}
-              The constraints are encoded in code, not buried in a freeform
-              prompt. Future compositions in this style use exactly the same
-              rules; the rules can be unit-tested.
-            </p>
-            <p>
-              <span className="font-medium text-foreground">
-                Creative leverage.
-              </span>{" "}
-              Paradoxically, more constraints produce more creative depth.
-              When the rule pins down density, repetition discipline, and
-              voice roles, the composer's remaining decisions — melodic
-              contour, harmonic motion, where to land — get all the
-              attention. The page's center of gravity shifts away from
-              arbitrary choices toward the choices that make the piece feel
-              like a piece.
+              The K-pop template is encoded; the next K-pop piece uses
+              exactly the same accompaniment derivation, the same chord-track
+              vocabulary, the same drum-mix philosophy. Claude composes a
+              different melody on top.
             </p>
             <p className="border-l-2 border-primary/60 pl-5 text-foreground/90">
-              This is Wavelody's product thesis: structured score generation,
-              with style templates as constraints, scales to fast and
-              consistent music creation.
+              Different genre, same product thesis: structured score
+              generation with style templates as constraints scales to fast
+              and consistent music creation.
             </p>
           </div>
         </div>
@@ -337,7 +285,7 @@ const ModalWind = () => {
       <section className="px-6 pb-20">
         <div ref={iterationsRef} className="reveal mx-auto max-w-3xl">
           <h2 className="font-serif-display text-3xl tracking-tight">
-            Seven versions to final master
+            Six versions to final master
           </h2>
           <div className="mt-8 space-y-3">
             {versions.map((v) => (
@@ -402,4 +350,4 @@ const ModalWind = () => {
   );
 };
 
-export default ModalWind;
+export default KpopThreeFourStyle;

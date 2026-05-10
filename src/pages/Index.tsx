@@ -84,11 +84,39 @@ const cards: ShowcaseCard[] = [
     description:
       "The first showcase composed entirely under strict constraint prompting. Oboe carries a non-repeating lyric line; double bass is the only voice allowed to repeat patterns; piano LH is always a 4-key chord; piano RH alternates 4-key and 3-key. The rules do half the creative work — and the LLM composes roughly twice as fast, with stronger style consistency.",
     audioSrc: "/showcase/modal-wind/studio.mp3",
-    audioLabel: "v5 studio — Colors of the Modal Wind",
+    audioLabel: "v7 studio — Colors of the Modal Wind",
     durationHint: "3:58",
     meta: "Oboe · double bass · piano · flute · clarinet · D Aeolian · 3:58",
     groupKey: "catalog",
-    footnote: "Constraint-prompted composition — the rules are encoded in code.",
+    footnote: "Constraint-prompted composition — also available as a jazz hip-hop arrangement.",
+  },
+  {
+    href: "/the-modal-wind-jazz-hiphop",
+    number: "VI",
+    title: "Colors of the Modal Wind",
+    tagline: "A jazz hip-hop arrangement — piano lead, cello shadow, modal minor.",
+    description:
+      "Composed from a Korean-language brief — 3:50 piano lead, cello background, modal minor. Eighteen iterations refining cello realism; the cello eventually got its own subsystem (per-note bow articulation, 5+ simultaneous SWAM CC streams, deep-bellow range composition). The piece showcases instruments taking turns rather than playing simultaneously.",
+    audioSrc: "/showcase/modal-wind-jazz-hiphop/studio.mp3",
+    audioLabel: "v18 studio — Colors of the Modal Wind (jazz hip-hop)",
+    durationHint: "3:53",
+    meta: "Piano · cello · modal minor · 3:53",
+    groupKey: "catalog",
+    footnote: "Sister arrangement to the rule-based ballad — same title, different world.",
+  },
+  {
+    href: "/three-four-style",
+    number: "VII",
+    title: "3!4! Style",
+    tagline: "A K-pop production — decomposed style template, melody from Claude, accompaniment algorithmic.",
+    description:
+      "Built from a decomposed style template — melody composed by Claude, accompaniment derived algorithmically from the chord track. Thirteen banjeon (반전, surprise) edits per Gemini's critique of v3. Dilla-style snare push, sidechain ducking, harmonic substitutions including bVI on the bridge.",
+    audioSrc: "/showcase/kpop-3-4-style/studio.mp3",
+    audioLabel: "v6 studio — 3!4! Style",
+    durationHint: "2:55",
+    meta: "Synth lead · pad · bass · drums · K-pop production · 2:55",
+    groupKey: "catalog",
+    footnote: "Genre-specific style decomposition — accompaniment derived from chord track.",
   },
 ];
 
@@ -179,10 +207,11 @@ const Index = () => {
             Score-first, sound second.
           </h1>
           <p className="mx-auto mt-6 max-w-[640px] text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Five original compositions, each built end-to-end through
+            Seven original compositions, each built end-to-end through
             structured score generation — four through free composition with
-            AI critique, the fifth through strict constraint prompting. Click
-            in to hear the work — and the process.
+            AI critique, two through strict constraint prompting on the same
+            "Modal Wind" theme, and one through a decomposed K-pop style
+            template. Click in to hear the work — and the process.
           </p>
         </div>
       </section>

@@ -138,18 +138,18 @@ const TheHiddenHeart = () => {
               Orchestral showcase
             </div>
             <h2 className="font-serif-display text-3xl tracking-tight md:text-4xl">
-              One score, three realizations
+              One score, four realizations
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
               The same 54 bars of <em>The Hidden Heart</em>, redistributed
-              across two orchestral ensembles. The score above is the work; the
-              solo piano render is its first realization. The score is{" "}
+              across three orchestral ensembles. The score above is the work;
+              the solo piano render is its first realization. The score is{" "}
               <span className="text-foreground">independent</span> from the
               realization — reorchestrating is a re-distribution problem, not
               a re-composing problem.
             </p>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Link
                 to="/the-hidden-heart/classical-orchestra"
                 className="group flex h-full flex-col rounded-xl border border-border/60 bg-card/60 p-6 transition-colors hover:border-primary/40"
@@ -185,6 +185,28 @@ const TheHiddenHeart = () => {
                   8-voice ensemble drawing on Korean traditional aesthetics —
                   heterophonic texture, sigimsae ornamentation, yeobaek
                   negative space carried by pedal-held piano resonance.
+                </p>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-transform group-hover:translate-x-0.5">
+                  Listen
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              </Link>
+
+              <Link
+                to="/the-hidden-heart/eastern-orchestra"
+                className="group flex h-full flex-col rounded-xl border border-border/60 bg-card/60 p-6 transition-colors hover:border-primary/40"
+              >
+                <span className="font-mono text-xs uppercase tracking-[0.18em] text-primary/90">
+                  Arrangement C
+                </span>
+                <h3 className="mt-2 font-serif-display text-2xl leading-tight tracking-tight text-foreground">
+                  Eastern Arrangement
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  A wider East Asian ornament palette over the same
+                  F-pentatonic skeleton — breath-led winds, slide-led strings,
+                  longer tolerance for silence between phrases. The longest of
+                  the three orchestral takes.
                 </p>
                 <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-transform group-hover:translate-x-0.5">
                   Listen

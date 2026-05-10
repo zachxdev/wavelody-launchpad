@@ -33,7 +33,17 @@ const cards: OrchestralCard[] = [
       "8-voice Korean-traditional aesthetic — heterophony, sigimsae, yeobaek negative space, saxophone fade.",
     audioSrc: "/showcase/serenade/orchestral-modern-asian.mp3",
     audioLabel: "Modern Asian — The Hidden Heart",
-    durationHint: "3:30",
+    durationHint: "3:38",
+  },
+  {
+    href: "/the-hidden-heart/eastern-orchestra",
+    piece: "The Hidden Heart",
+    arrangement: "Eastern",
+    oneLiner:
+      "A wider East Asian palette over the same F-pentatonic skeleton — breath-led winds, slide-led strings, longer negative space between phrases.",
+    audioSrc: "/showcase/serenade/orchestral-eastern.mp3",
+    audioLabel: "Eastern — The Hidden Heart",
+    durationHint: "4:40",
   },
   {
     href: "/sky-combat/symphonic",

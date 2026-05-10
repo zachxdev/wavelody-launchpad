@@ -16,10 +16,13 @@ import TheHiddenHeart from "./pages/TheHiddenHeart.tsx";
 import TheHiddenHeartIterations from "./pages/TheHiddenHeartIterations.tsx";
 import TheHiddenHeartClassical from "./pages/TheHiddenHeartClassical.tsx";
 import TheHiddenHeartModernAsian from "./pages/TheHiddenHeartModernAsian.tsx";
+import TheHiddenHeartEastern from "./pages/TheHiddenHeartEastern.tsx";
 import SkyCombat from "./pages/SkyCombat.tsx";
 import SkyCombatIterations from "./pages/SkyCombatIterations.tsx";
 import SkyCombatSymphonic from "./pages/SkyCombatSymphonic.tsx";
 import ModalWind from "./pages/ModalWind.tsx";
+import ModalWindJazzHipHop from "./pages/ModalWindJazzHipHop.tsx";
+import KpopThreeFourStyle from "./pages/KpopThreeFourStyle.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -66,6 +69,10 @@ const App = () => (
             path="/the-hidden-heart/modern-asian-orchestra"
             element={<TheHiddenHeartModernAsian />}
           />
+          <Route
+            path="/the-hidden-heart/eastern-orchestra"
+            element={<TheHiddenHeartEastern />}
+          />
 
           {/* Piece IV — Sky Combat */}
           <Route path="/sky-combat" element={<SkyCombat />} />
@@ -78,8 +85,17 @@ const App = () => (
             element={<SkyCombatSymphonic />}
           />
 
-          {/* Piece V — Colors of the Modal Wind (constraint-prompted) */}
+          {/* Piece V — Colors of the Modal Wind (constraint-prompted ballad) */}
           <Route path="/the-modal-wind" element={<ModalWind />} />
+
+          {/* Piece VI — Colors of the Modal Wind (jazz hip-hop arrangement) */}
+          <Route
+            path="/the-modal-wind-jazz-hiphop"
+            element={<ModalWindJazzHipHop />}
+          />
+
+          {/* Piece VII — 3!4! Style (K-pop, decomposed style template) */}
+          <Route path="/three-four-style" element={<KpopThreeFourStyle />} />
 
           {/* Speedrun-access flow (unchanged) */}
           <Route path="/access" element={<Access />} />
