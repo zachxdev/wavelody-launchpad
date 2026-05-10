@@ -76,6 +76,20 @@ const cards: ShowcaseCard[] = [
     meta: "Solo piano · B minor / B major · 120 bars at 160 BPM · 3:02",
     groupKey: "catalog",
   },
+  {
+    href: "/the-modal-wind",
+    number: "V",
+    title: "Colors of the Modal Wind",
+    tagline: "An original chamber ballad — composed under strict compositional rules.",
+    description:
+      "The first showcase composed entirely under strict constraint prompting. Oboe carries a non-repeating lyric line; double bass is the only voice allowed to repeat patterns; piano LH is always a 4-key chord; piano RH alternates 4-key and 3-key. The rules do half the creative work — and the LLM composes roughly twice as fast, with stronger style consistency.",
+    audioSrc: "/showcase/modal-wind/studio.mp3",
+    audioLabel: "v5 studio — Colors of the Modal Wind",
+    durationHint: "3:58",
+    meta: "Oboe · double bass · piano · flute · clarinet · D Aeolian · 3:58",
+    groupKey: "catalog",
+    footnote: "Constraint-prompted composition — the rules are encoded in code.",
+  },
 ];
 
 const ShowcaseCardView = ({ card }: { card: ShowcaseCard }) => {
@@ -165,9 +179,10 @@ const Index = () => {
             Score-first, sound second.
           </h1>
           <p className="mx-auto mt-6 max-w-[640px] text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Four original compositions, each built end-to-end through
-            structured score generation and AI critique. Click in to hear the
-            work — and the process.
+            Five original compositions, each built end-to-end through
+            structured score generation — four through free composition with
+            AI critique, the fifth through strict constraint prompting. Click
+            in to hear the work — and the process.
           </p>
         </div>
       </section>

@@ -19,6 +19,7 @@ import TheHiddenHeartModernAsian from "./pages/TheHiddenHeartModernAsian.tsx";
 import SkyCombat from "./pages/SkyCombat.tsx";
 import SkyCombatIterations from "./pages/SkyCombatIterations.tsx";
 import SkyCombatSymphonic from "./pages/SkyCombatSymphonic.tsx";
+import ModalWind from "./pages/ModalWind.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -76,6 +77,9 @@ const App = () => (
             path="/sky-combat/symphonic"
             element={<SkyCombatSymphonic />}
           />
+
+          {/* Piece V — Colors of the Modal Wind (constraint-prompted) */}
+          <Route path="/the-modal-wind" element={<ModalWind />} />
 
           {/* Speedrun-access flow (unchanged) */}
           <Route path="/access" element={<Access />} />
