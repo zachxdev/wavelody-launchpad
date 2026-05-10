@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import AudioPlayer from "@/components/showcase/AudioPlayer";
+import OrchestralRoundRobin from "@/components/showcase/OrchestralRoundRobin";
 import { finalIteration } from "@/components/showcase/iterations";
 import { lullabyFinalIteration } from "@/components/showcase/lullabyIterations";
 import { serenadeFinalIteration } from "@/components/showcase/serenadeIterations";
@@ -179,6 +180,9 @@ const Index = () => {
           ))}
         </div>
       </section>
+
+      {/* Orchestral arrangements — auto-rotating round-robin */}
+      <OrchestralRoundRobin />
 
       {/* Footer */}
       <footer className="border-t border-border/60 bg-card/40 px-6 py-10">

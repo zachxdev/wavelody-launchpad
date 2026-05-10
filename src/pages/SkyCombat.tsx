@@ -21,6 +21,7 @@ const SkyCombat = () => {
   const descRef = useReveal<HTMLDivElement>();
   const sectionsRef = useReveal<HTMLDivElement>();
   const blueprintRef = useReveal<HTMLDivElement>();
+  const orchestralRef = useReveal<HTMLDivElement>();
   const ctaRef = useReveal<HTMLDivElement>();
 
   return (
@@ -128,6 +129,52 @@ const SkyCombat = () => {
       <section className="px-6 pb-20">
         <div ref={blueprintRef} className="reveal mx-auto max-w-4xl">
           <SkyCombatBlueprint />
+        </div>
+      </section>
+
+      {/* Orchestral showcase — now also as a symphony */}
+      <section className="px-6 pb-20">
+        <div ref={orchestralRef} className="reveal mx-auto max-w-4xl">
+          <div className="rounded-2xl border border-border/60 bg-card/40 p-8 md:p-10">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary/90">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Orchestral showcase
+            </div>
+            <h2 className="font-serif-display text-3xl tracking-tight md:text-4xl">
+              Now also as a symphony
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
+              The same 126 bars at the same tempo, redistributed across a
+              17-voice symphonic ensemble. Three sections deeply rearranged —
+              not transcribed — in the lineage of Holst, Wagner, Stravinsky,
+              and Prokofiev. A symphonic miniature, not an extended fantasy.
+            </p>
+
+            <div className="mt-8">
+              <Link
+                to="/sky-combat/symphonic"
+                className="group flex h-full flex-col rounded-xl border border-border/60 bg-card/60 p-6 transition-colors hover:border-primary/40"
+              >
+                <span className="font-mono text-xs uppercase tracking-[0.18em] text-primary/90">
+                  Arrangement
+                </span>
+                <h3 className="mt-2 font-serif-display text-2xl leading-tight tracking-tight text-foreground">
+                  Symphonic Arrangement
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  17 voices — full strings (incl. doubled heterophonic violins
+                  and double bass), woodwind quintet, full brass, plus piano
+                  doubling as percussive timpani-substitute in the lowest
+                  register. Two differentiated peaks at Hero's Stand (bar 31)
+                  and Climactic Cross-Fire (bars 97–114).
+                </p>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-transform group-hover:translate-x-0.5">
+                  Listen
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 

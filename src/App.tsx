@@ -18,6 +18,7 @@ import TheHiddenHeartClassical from "./pages/TheHiddenHeartClassical.tsx";
 import TheHiddenHeartModernAsian from "./pages/TheHiddenHeartModernAsian.tsx";
 import SkyCombat from "./pages/SkyCombat.tsx";
 import SkyCombatIterations from "./pages/SkyCombatIterations.tsx";
+import SkyCombatSymphonic from "./pages/SkyCombatSymphonic.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,10 @@ const App = () => (
           <Route
             path="/sky-combat/iterations"
             element={<SkyCombatIterations />}
+          />
+          <Route
+            path="/sky-combat/symphonic"
+            element={<SkyCombatSymphonic />}
           />
 
           {/* Speedrun-access flow (unchanged) */}
