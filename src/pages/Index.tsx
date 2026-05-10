@@ -104,20 +104,6 @@ const cards: ShowcaseCard[] = [
     groupKey: "catalog",
     footnote: "Sister arrangement to the rule-based ballad — same title, different world.",
   },
-  {
-    href: "/three-four-style",
-    number: "VII",
-    title: "3!4! Style",
-    tagline: "A K-pop production — decomposed style template, melody from Claude, accompaniment algorithmic.",
-    description:
-      "Built from a decomposed style template — melody composed by Claude, accompaniment derived algorithmically from the chord track. Thirteen banjeon (반전, surprise) edits per Gemini's critique of v3. Dilla-style snare push, sidechain ducking, harmonic substitutions including bVI on the bridge.",
-    audioSrc: "/showcase/kpop-3-4-style/studio.mp3",
-    audioLabel: "v6 studio — 3!4! Style",
-    durationHint: "2:55",
-    meta: "Synth lead · pad · bass · drums · K-pop production · 2:55",
-    groupKey: "catalog",
-    footnote: "Genre-specific style decomposition — accompaniment derived from chord track.",
-  },
 ];
 
 const ShowcaseCardView = ({ card }: { card: ShowcaseCard }) => {
@@ -207,11 +193,11 @@ const Index = () => {
             Score-first, sound second.
           </h1>
           <p className="mx-auto mt-6 max-w-[640px] text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Seven original compositions, each built end-to-end through
+            Six original compositions, each built end-to-end through
             structured score generation — four through free composition with
-            AI critique, two through strict constraint prompting on the same
-            "Modal Wind" theme, and one through a decomposed K-pop style
-            template. Click in to hear the work — and the process.
+            AI critique, and two arrangements of the same "Modal Wind" theme
+            built through constraint prompting and decomposed templates.
+            Click in to hear the work — and the process.
           </p>
         </div>
       </section>

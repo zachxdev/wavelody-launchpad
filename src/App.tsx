@@ -22,7 +22,6 @@ import SkyCombatIterations from "./pages/SkyCombatIterations.tsx";
 import SkyCombatSymphonic from "./pages/SkyCombatSymphonic.tsx";
 import ModalWind from "./pages/ModalWind.tsx";
 import ModalWindJazzHipHop from "./pages/ModalWindJazzHipHop.tsx";
-import KpopThreeFourStyle from "./pages/KpopThreeFourStyle.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -93,9 +92,6 @@ const App = () => (
             path="/the-modal-wind-jazz-hiphop"
             element={<ModalWindJazzHipHop />}
           />
-
-          {/* Piece VII — 3!4! Style (K-pop, decomposed style template) */}
-          <Route path="/three-four-style" element={<KpopThreeFourStyle />} />
 
           {/* Speedrun-access flow (unchanged) */}
           <Route path="/access" element={<Access />} />
