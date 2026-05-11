@@ -22,6 +22,7 @@ import SkyCombatIterations from "./pages/SkyCombatIterations.tsx";
 import SkyCombatSymphonic from "./pages/SkyCombatSymphonic.tsx";
 import ModalWind from "./pages/ModalWind.tsx";
 import ModalWindJazzHipHop from "./pages/ModalWindJazzHipHop.tsx";
+import TheQuintetMethod from "./pages/TheQuintetMethod.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,9 @@ const App = () => (
             path="/the-modal-wind-jazz-hiphop"
             element={<ModalWindJazzHipHop />}
           />
+
+          {/* Piece VII — The Quintet Method (3-phase pipeline jazz quintet) */}
+          <Route path="/the-quintet-method" element={<TheQuintetMethod />} />
 
           {/* Speedrun-access flow (unchanged) */}
           <Route path="/access" element={<Access />} />

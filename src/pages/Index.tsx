@@ -104,6 +104,20 @@ const cards: ShowcaseCard[] = [
     groupKey: "catalog",
     footnote: "Sister arrangement to the rule-based ballad — same title, different world.",
   },
+  {
+    href: "/the-quintet-method",
+    number: "VII",
+    title: "The Quintet Method",
+    tagline: "A hard-bop jazz quintet — composed in three phases: algorithm, then prune, then add.",
+    description:
+      "Piano, bass, drums, sax, trumpet. Six 24-bar cycles, each handing the lead to a different voice and closing with an Erroll Garner-influenced piano solo over a surprise Picardy third. Composed via a 3-phase pipeline — an algorithm writes the full dense score under a per-bar chord-tone constraint, Gemini prunes 15–30% of the notes for shape, then Gemini adds targeted motif statements and soloistic flourishes. ~2:30 of compute for a 5-minute piece.",
+    audioSrc: "/showcase/jazz-quintet/studio.mp3",
+    audioLabel: "v9 studio — The Quintet Method",
+    durationHint: "5:16",
+    meta: "Piano · bass · drums · sax · trumpet · A Dorian · ~115 BPM · 5:16",
+    groupKey: "catalog",
+    footnote: "3-phase pipeline: algorithm + LLM prune + LLM add. 3.76× faster than pure-LLM composition.",
+  },
 ];
 
 const ShowcaseCardView = ({ card }: { card: ShowcaseCard }) => {
@@ -193,11 +207,12 @@ const Index = () => {
             Score-first, sound second.
           </h1>
           <p className="mx-auto mt-6 max-w-[640px] text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Six original compositions, each built end-to-end through
+            Seven original compositions, each built end-to-end through
             structured score generation — four through free composition with
-            AI critique, and two arrangements of the same "Modal Wind" theme
-            built through constraint prompting and decomposed templates.
-            Click in to hear the work — and the process.
+            AI critique, two arrangements of the same "Modal Wind" theme
+            built through constraint prompting, and one hard-bop quintet
+            composed by a 3-phase algorithm + LLM pipeline. Click in to
+            hear the work — and the process.
           </p>
         </div>
       </section>
