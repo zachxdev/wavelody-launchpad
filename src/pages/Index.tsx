@@ -96,9 +96,9 @@ const cards: ShowcaseCard[] = [
     title: "Colors of the Modal Wind",
     tagline: "A jazz hip-hop arrangement — piano lead, cello shadow, modal minor.",
     description:
-      "Composed from a Korean-language brief — 3:50 piano lead, cello background, modal minor. Eighteen iterations refining cello realism; the cello eventually got its own subsystem (per-note bow articulation, 5+ simultaneous SWAM CC streams, deep-bellow range composition). The piece showcases instruments taking turns rather than playing simultaneously.",
+      "Composed from a Korean-language brief — 3:50 piano lead, cello background, modal minor. Twenty-one iterations refining cello realism and modal-scale awareness; the cello eventually got its own subsystem (per-note bow articulation, 5+ simultaneous SWAM CC streams, deep-bellow range composition), and the piano right hand learned to track the chord progression's modal mixture. The piece showcases instruments taking turns rather than playing simultaneously.",
     audioSrc: "/showcase/modal-wind-jazz-hiphop/studio.mp3",
-    audioLabel: "v18 studio — Colors of the Modal Wind (jazz hip-hop)",
+    audioLabel: "v21 studio — Colors of the Modal Wind (jazz hip-hop)",
     durationHint: "3:53",
     meta: "Piano · cello · modal minor · 3:53",
     groupKey: "catalog",

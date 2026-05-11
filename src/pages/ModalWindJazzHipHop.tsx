@@ -75,9 +75,27 @@ const versions: Array<{ tag: string; title: string; body: string }> = [
   },
   {
     tag: "v18",
+    title: "Cello subsystem reference take",
+    body:
+      "Stable cello subsystem; full instruments-take-turns texture. The cello story closes; the piano right hand becomes the next iteration target.",
+  },
+  {
+    tag: "v19",
+    title: "Modal scale awareness in the right hand",
+    body:
+      "The piano RH learns to track the chord progression's modal mixture — Lydian over borrowed major chords, harmonic minor over Am(maj9), and so on. The modal moments stop sounding accidental and start sounding inhabited.",
+  },
+  {
+    tag: "v20",
+    title: "White-key / black-key phase mirror",
+    body:
+      "A black-key landing in the first half of the form gets a Lydian #11 echo over a Cmaj9 in the second half — a quiet symmetry that pays off the earlier color shift without underlining it.",
+  },
+  {
+    tag: "v21",
     title: "Final master",
     body:
-      "Stable cello subsystem; full instruments-take-turns texture; both studio and concert cuts emit from one render. Reference take for the jazz hip-hop arrangement.",
+      "Climax LH voicing fix — a quartal voicing was producing non-chord-tones over a Bb7#11 peak, now properly voiced. Final cello realism polish: per-note SWAM detail across CC11 (capped under the 63 threshold), vibrato fade-in on CC1, per-note vibrato rate on CC19, and a post-peak sustain envelope at the climax.",
   },
 ];
 
@@ -120,8 +138,8 @@ const ModalWindJazzHipHop = () => {
           </h1>
           <p className="mx-auto mt-6 max-w-[640px] text-lg leading-relaxed text-muted-foreground">
             Piano lead, cello shadow, modal minor. Composed from a
-            Korean-language brief — eighteen iterations of cello realism
-            refinement.
+            Korean-language brief — twenty-one iterations refining cello
+            realism and the piano's modal-scale awareness.
           </p>
 
           <div className="mx-auto mt-10 max-w-xl">
@@ -181,7 +199,9 @@ const ModalWindJazzHipHop = () => {
               The piece started as a Korean-language brief from my wife —
               'piano lead, cello background, modal minor, around three-fifty'.
               Short brief, long road. The piano part came together quickly;
-              the cello took eighteen iterations.
+              the cello took eighteen iterations. Three more passes after
+              that pulled the piano right hand into the chord progression's
+              modal mixture so the harmony stopped sounding accidental.
             </p>
             <p>
               The challenge wasn't writing notes for the cello — the
@@ -208,9 +228,9 @@ const ModalWindJazzHipHop = () => {
             What it took to make the cello sound like a cello
           </h2>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Eighteen versions, but the work clusters into four ideas. Each
-            one was a v-N moment where the cello suddenly sounded more like
-            an instrument than a sample.
+            Eighteen versions on the cello alone, but the work clusters into
+            four ideas. Each one was a v-N moment where the cello suddenly
+            sounded more like an instrument than a sample.
           </p>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2">
@@ -262,7 +282,7 @@ const ModalWindJazzHipHop = () => {
       <section className="px-6 pb-20">
         <div ref={iterationsRef} className="reveal mx-auto max-w-3xl">
           <h2 className="font-serif-display text-3xl tracking-tight">
-            Eighteen versions of cello realism
+            Twenty-one versions — cello realism, then modal awareness
           </h2>
           <div className="mt-8 space-y-3">
             {versions.map((v) => (
