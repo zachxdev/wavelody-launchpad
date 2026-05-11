@@ -25,84 +25,76 @@ const masters: Record<
   },
 };
 
-const phases: Array<{
-  tag: string;
-  name: string;
-  duration: string;
-  body: string;
-}> = [
+const motifs: Array<{ tag: string; name: string; body: string }> = [
   {
-    tag: "Phase 1",
-    name: "Algorithmic",
-    duration: "~0.3 s",
+    tag: "Motif 1",
+    name: "Rising arpeggio with 9th",
     body:
-      "A deterministic composer emits the full 144-bar score in a few hundred milliseconds. Every note passes a per-bar harmonic constraint filter — either a chord-tone or a scale-tone of the bar's chord. The output is dense, correct, and lifeless on purpose.",
+      "An ascending chord-tone climb that leans on the 9th — open, lifted, the head's most immediately quotable shape. Trumpet favors it.",
   },
   {
-    tag: "Phase 2",
-    name: "LLM Prune",
-    duration: "~2:25",
+    tag: "Motif 2",
+    name: "Descending Dorian scale fragment",
     body:
-      "Gemini Pro reads the algorithmic dense score and removes 15–30% of notes for melodic shape. Modern jazz favors space. The model isn't writing notes — it's choosing which ones to take away.",
+      "A short stepwise fall through the A Dorian scale. The piece's most idiomatic post-bop gesture. Sax favors it.",
   },
   {
-    tag: "Phase 3",
-    name: "LLM Add",
-    duration: "~1:20",
+    tag: "Motif 3",
+    name: "Descending bridge sigh",
     body:
-      "Gemini adds back, this time targeted: motif statements at structural moments, soloistic flourishes during the sax and trumpet features. Phase 1 wrote the harmony; Phase 2 shaped the line; Phase 3 places the punctuation.",
+      "A longer descending phrase from the B section of the head — the form's emotional anchor. Both soloists return to it at structural moments.",
   },
 ];
 
-const cycles: Array<{ tag: string; feature: string; body: string }> = [
-  {
-    tag: "Cycle 1",
-    feature: "Piano (soft brushes)",
-    body:
-      "Piano leads the opening 24 bars over brushed drums. Soft entry, modal A Dorian, the form's home.",
-  },
-  {
-    tag: "Cycle 2",
-    feature: "Ensemble groove",
-    body:
-      "The quintet settles in together. Bass walks, comping under a shared melodic statement before the first solo feature.",
-  },
-  {
-    tag: "Cycle 3",
-    feature: "Saxophone",
-    body:
-      "Sax takes the first solo. Long durations dominate (80%+ of sax notes) so the SWAM CC11 vibrato fade-in has room to develop on each note.",
-  },
-  {
-    tag: "Cycle 4",
-    feature: "Trumpet",
-    body:
-      "Trumpet feature with the same long-note bias. Same harmonic ground; different timbral world.",
-  },
-  {
-    tag: "Cycle 5",
-    feature: "All-hands climax",
-    body:
-      "Drums move from brushes to loud sticks and crashes. The cycle peaks as a full-ensemble statement before the close.",
-  },
-  {
-    tag: "Cycle 6",
-    feature: "Piano solo (Erroll Garner-influenced)",
-    body:
-      "Piano closes the form. Drums return to brushes. The solo borrows Erroll Garner's 'Misty' vocabulary at the score level — 4-on-floor LH chord stabs, octave-doubled RH melody, grace notes, tremolos — kept partial (~70–80% Garner, 20–30% deviation) so the form can resolve back to its own cadence rather than Garner's.",
-  },
-];
+const form: Array<{ tag: string; section: string; bars: string; body: string }> =
+  [
+    {
+      tag: "A · A · B · A",
+      section: "Head",
+      bars: "Bars 1–32",
+      body:
+        "32-bar AABA melody composed by the LLM first, with three motivic cells explicitly identified before any solo is written. The head isn't material; it's the source the rest of the piece quotes from.",
+    },
+    {
+      tag: "Sax",
+      section: "Sax solo",
+      bars: "Bars 33–72",
+      body:
+        "Composed by the LLM with the head as context — and a hard requirement to quote the three motifs. Pitch-sequence analysis verified 27 motif quotes. Sax leans hardest on Motif 2 (Dorian descents).",
+    },
+    {
+      tag: "Trumpet",
+      section: "Trumpet solo",
+      bars: "Bars 73–112",
+      body:
+        "Same constraint, different voice — 36 motif quotes verified. Trumpet's bias falls on Motif 1 (rising arpeggio with 9th). Two soloists, two motivic personalities under the same rule.",
+    },
+    {
+      tag: "Trades",
+      section: "Sax + trumpet trades",
+      bars: "Bars 113–128",
+      body:
+        "Four-bar phrases alternating between the horns, each phrase quoting the head. The closest the piece gets to conversational call-and-response.",
+    },
+    {
+      tag: "Head out",
+      section: "Head paraphrase",
+      bars: "Bars 129–144",
+      body:
+        "Piano restates the theme — paraphrased rather than literal. The listener recognizes 'we're back home' before the surprise resolution arrives.",
+    },
+  ];
 
 const refinements: Array<{ title: string; body: string }> = [
   {
-    title: "White-key / black-key modal mixture",
+    title: "Two soloists, two personalities",
     body:
-      "The piece sits 60% in A Dorian (its home) and 40% in borrowed major chords from outside the home modality. Each switch is a color shift, not a key change — the form stays anchored.",
+      "The motif-quote bias is deliberate — sax and trumpet weren't given the same prompt. Each soloist's instructions name a preferred motif and let the other two appear as supporting material. The result reads as two players who studied the head differently.",
   },
   {
-    title: "Per-cycle drum dynamics",
+    title: "Verified, not asserted",
     body:
-      "Brushes in cycles 1 and 6 bracket the form; sticks and crashes peak in cycle 5. Eight specific accent points across the piece — entry crash, brush rolls into the solos, climax crash, a cymbal swell to silence — mark the structural seams.",
+      "Each solo is post-checked by a pitch-sequence analyzer that counts motif quotes against the LLM's claimed quote count. The brief Gemini critique cycle on v9 caught the 'fake-speaking jazz' problem; the verifier in v10 makes sure the LLM's solo actually contains what it claims.",
   },
   {
     title: "Brass long-note bias",
@@ -119,8 +111,8 @@ const refinements: Array<{ title: string; body: string }> = [
 const TheQuintetMethod = () => {
   const heroRef = useReveal<HTMLDivElement>();
   const descRef = useReveal<HTMLDivElement>();
-  const phasesRef = useReveal<HTMLDivElement>();
-  const cyclesRef = useReveal<HTMLDivElement>();
+  const motifsRef = useReveal<HTMLDivElement>();
+  const formRef = useReveal<HTMLDivElement>();
   const refinementsRef = useReveal<HTMLDivElement>();
   const whyRef = useReveal<HTMLDivElement>();
 
@@ -147,15 +139,15 @@ const TheQuintetMethod = () => {
           </Link>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Wavelody showcase · piece VII · 3-phase pipeline
+            Wavelody showcase · piece VII · head-first composition
           </div>
           <h1 className="font-serif-display text-5xl leading-[1.05] tracking-tight sm:text-6xl md:text-[5rem]">
             The Quintet Method
           </h1>
           <p className="mx-auto mt-6 max-w-[640px] text-lg leading-relaxed text-muted-foreground">
             A hard-bop jazz quintet — piano, bass, drums, sax, trumpet —
-            composed in three phases: an algorithm writes the dense score,
-            the LLM prunes it for shape, then adds back the punctuation.
+            composed head-first. Write the melody and identify its motifs;
+            require every solo to quote them; verify the quotes.
           </p>
 
           <div className="mx-auto mt-10 max-w-xl">
@@ -212,105 +204,110 @@ const TheQuintetMethod = () => {
           </h2>
           <div className="mt-6 space-y-5 text-base leading-relaxed text-muted-foreground">
             <p>
-              A hard-bop quintet in the modern post-Davis lineage — piano,
-              upright bass, drums, tenor sax, trumpet. Six cycles of 24 bars
-              each, through-composed rather than AABA. Each cycle hands the
-              lead to a different voice; the piece ends with an Erroll
-              Garner-influenced piano solo and a surprise Picardy third in
-              the final five seconds.
+              A hard-bop quintet in the standard jazz form — head, sax solo,
+              trumpet solo, trades, head out. Piano, upright bass, drums,
+              tenor sax, trumpet. 144 bars in A Dorian at ~115 BPM. The
+              compositional architecture is the interesting part.
             </p>
             <p>
-              The thing this piece argues for isn't the result so much as the
-              architecture. <em>The Quintet Method</em> is a three-phase
-              composition pipeline — algorithm, then prune, then add — that
-              writes the full piece in roughly two and a half minutes of
-              compute. That's 3.76× faster than asking the LLM to compose
-              from scratch, with comparable quality and noticeably better
-              harmonic discipline (every note is a chord-tone or scale-tone
-              of its bar).
+              Nine earlier versions of this piece used a different pipeline —
+              an algorithm wrote a dense chord-tone-correct draft, then the
+              LLM pruned it for shape, then added back punctuation. The
+              result sounded like jazz harmonically and like nothing
+              compositionally — chord-tone soup, the verdict was, like a
+              comedian fake-speaking the language. The diagnosis was right:
+              the soloists weren't <em>saying</em> anything, because there
+              was nothing to say. No theme to quote, no motif to develop, no
+              ear-memory to reward.
+            </p>
+            <p>
+              v10 throws that architecture out and composes the way a jazz
+              writer would. The head goes first; its three motifs are
+              identified explicitly; the solos are written under a hard
+              requirement to quote them. The pipeline guarantees a piece
+              that <em>talks about itself</em>.
             </p>
           </div>
         </div>
       </section>
 
-      {/* The 3-phase pipeline — the headline */}
+      {/* The three motifs — the headline */}
       <section className="px-6 pb-20">
-        <div ref={phasesRef} className="reveal mx-auto max-w-4xl">
+        <div ref={motifsRef} className="reveal mx-auto max-w-4xl">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary/90">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            The pipeline
+            The three motifs
           </div>
           <h2 className="font-serif-display text-3xl tracking-tight md:text-4xl">
-            Algorithm, then prune, then add
+            What the soloists are required to quote
           </h2>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Three phases, three different jobs. Each one is the cheapest tool
-            that can do the work — and skipping any of them visibly degrades
-            the result.
+            The head is composed first. Then three motivic cells are
+            identified by name. The two soloists each receive the head, the
+            motifs, and a hard instruction: your solo must quote these.
           </p>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-3">
-            {phases.map((p) => (
+            {motifs.map((m) => (
               <div
-                key={p.tag}
+                key={m.tag}
                 className="flex flex-col rounded-xl border border-border/60 bg-card/40 p-6"
               >
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-xs uppercase tracking-[0.18em] text-primary/90">
-                    {p.tag}
-                  </span>
-                  <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                    {p.duration}
-                  </span>
-                </div>
+                <span className="font-mono text-xs uppercase tracking-[0.18em] text-primary/90">
+                  {m.tag}
+                </span>
                 <h3 className="mt-3 font-serif-display text-xl tracking-tight text-foreground">
-                  {p.name}
+                  {m.name}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  {p.body}
+                  {m.body}
                 </p>
               </div>
             ))}
           </div>
 
           <p className="mt-8 max-w-3xl border-l-2 border-primary/60 pl-5 text-base leading-relaxed text-foreground/90">
-            Total composition time: roughly two and a half minutes for a
-            five-minute piece. <span className="text-muted-foreground">
-              3.76× faster than pure-LLM composition; comparable quality;
-              stronger harmonic correctness from the algorithmic constraint
-              filter.
+            27 motif quotes in the sax solo; 36 in the trumpet solo.{" "}
+            <span className="text-muted-foreground">
+              Verified after the fact by a pitch-sequence analyzer — not
+              taken on the LLM's word that the quotes are there.
             </span>
           </p>
         </div>
       </section>
 
-      {/* The six cycles */}
+      {/* Form — head, solos, trades, head out */}
       <section className="px-6 pb-20">
-        <div ref={cyclesRef} className="reveal mx-auto max-w-4xl">
+        <div ref={formRef} className="reveal mx-auto max-w-4xl">
           <h2 className="font-serif-display text-3xl tracking-tight md:text-4xl">
-            Six cycles, six features
+            Standard form, not modal jam
           </h2>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            The 144 bars divide into six 24-bar cycles. The harmony repeats;
-            the lead voice doesn't. Each cycle hands the foreground to a
-            different player, and the drums shift dynamics around them.
+            HEAD → SAX SOLO → TRUMPET SOLO → TRADES → HEAD OUT. A real jazz
+            arrangement with a beginning, soloists who reference home, a
+            conversation between them, and a return.
           </p>
 
           <div className="mt-8 space-y-3">
-            {cycles.map((c) => (
+            {form.map((f) => (
               <div
-                key={c.tag}
+                key={f.tag}
                 className="flex flex-col gap-1 rounded-lg border border-border/60 bg-card/40 px-5 py-4 sm:flex-row sm:items-baseline sm:gap-5"
               >
-                <span className="w-24 shrink-0 font-mono text-sm uppercase tracking-[0.12em] text-primary/90">
-                  {c.tag}
+                <span className="w-28 shrink-0 font-mono text-xs uppercase tracking-[0.12em] text-primary/90">
+                  {f.tag}
                 </span>
                 <div className="flex-1">
-                  <div className="font-serif-display text-lg leading-tight tracking-tight text-foreground">
-                    {c.feature}
+                  <div className="flex flex-wrap items-baseline gap-x-3">
+                    <span className="font-serif-display text-lg leading-tight tracking-tight text-foreground">
+                      {f.section}
+                    </span>
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                      {f.bars}
+                    </span>
                   </div>
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                    {c.body}
+                    {f.body}
                   </p>
                 </div>
               </div>
@@ -326,9 +323,8 @@ const TheQuintetMethod = () => {
             What the LLM can't see — and the score has to encode
           </h2>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Beyond the three-phase pipeline, the score carries instructions
-            the engine plays back literally. These are the choices that
-            decide whether the piece reads as samples or as players.
+            Composition is half the work. The other half is the choices
+            that decide whether the piece reads as samples or as players.
           </p>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2">
@@ -353,38 +349,46 @@ const TheQuintetMethod = () => {
       <section className="px-6 pb-20">
         <div ref={whyRef} className="reveal mx-auto max-w-3xl">
           <h2 className="font-serif-display text-3xl tracking-tight">
-            Why a 3-phase pipeline matters
+            Why head-first composition matters
           </h2>
           <div className="mt-6 space-y-5 text-base leading-relaxed text-muted-foreground">
             <p>
               <span className="font-medium text-foreground">
-                Harmonic correctness, for free.
+                Solos that say something.
               </span>{" "}
-              The algorithmic phase has a per-bar constraint filter — every
-              note is a chord-tone or scale-tone of its bar's chord. The LLM
-              never has the chance to write a wrong note; it only chooses
-              which correct ones to keep.
-            </p>
-            <p>
-              <span className="font-medium text-foreground">Speedup.</span>{" "}
-              ~2:30 of compute for a 5-minute piece. The algorithm carries
-              the volume; the LLM carries the shape. Both phases are doing
-              what they're good at and nothing else.
+              A jazz solo without thematic reference is wallpaper. By
+              composing the head first and requiring the solos to quote it,
+              the architecture guarantees that each solo is{" "}
+              <em>about</em> the piece it sits inside. The listener's
+              ear-memory rewards the references it half-recognizes.
             </p>
             <p>
               <span className="font-medium text-foreground">
-                Prune-then-add, not write-then-edit.
+                Two soloists, two personalities — by design.
               </span>{" "}
-              The LLM never sees a blank score. It sees a dense, harmonically
-              correct draft and reasons about <em>shape</em>. Editing is a
-              cheaper cognitive task than composition; the LLM's strength is
-              taste, not arithmetic.
+              Sax and trumpet receive the same head and the same three
+              motifs, but each is given a different motif-preference bias.
+              The pitch-sequence analyzer confirms the bias landed: sax
+              quotes Motif 2 most, trumpet quotes Motif 1 most. Two players
+              who studied the same melody and remembered different parts.
+            </p>
+            <p>
+              <span className="font-medium text-foreground">
+                Foundational module, not one-off.
+              </span>{" "}
+              The pipeline lives in{" "}
+              <span className="font-mono text-foreground">
+                jazz_head_first_composition.py
+              </span>{" "}
+              and is the pattern for all future jazz work — different head,
+              different motifs, same architecture. The architecture is the
+              product; the piece is one rendering of it.
             </p>
             <p className="border-l-2 border-primary/60 pl-5 text-foreground/90">
               Same product thesis as the constraint-prompted Modal Wind:
-              structured score generation, with the cheapest tool doing each
+              structured score generation, with the right tool for each
               layer of the work, scales to fast and consistent music
-              creation.
+              creation. For jazz, the right structure is the head.
             </p>
           </div>
         </div>

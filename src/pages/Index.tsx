@@ -108,15 +108,15 @@ const cards: ShowcaseCard[] = [
     href: "/the-quintet-method",
     number: "VII",
     title: "The Quintet Method",
-    tagline: "A hard-bop jazz quintet — composed in three phases: algorithm, then prune, then add.",
+    tagline: "A hard-bop jazz quintet — head-first composition with motivic development.",
     description:
-      "Piano, bass, drums, sax, trumpet. Six 24-bar cycles, each handing the lead to a different voice and closing with an Erroll Garner-influenced piano solo over a surprise Picardy third. Composed via a 3-phase pipeline — an algorithm writes the full dense score under a per-bar chord-tone constraint, Gemini prunes 15–30% of the notes for shape, then Gemini adds targeted motif statements and soloistic flourishes. ~2:30 of compute for a 5-minute piece.",
+      "Piano, bass, drums, sax, trumpet. Standard jazz form: head, sax solo, trumpet solo, trades, head out. The LLM writes the 32-bar AABA head first; three motifs are identified by name; both solos are required to quote them. 27 motif quotes in the sax solo, 36 in the trumpet — verified by pitch-sequence analysis, not asserted. Sax and trumpet are given different motif-preference biases, so the two soloists develop distinct musical personalities under the same rule. Closes with a surprise Picardy third in the final five seconds.",
     audioSrc: "/showcase/jazz-quintet/studio.mp3",
-    audioLabel: "v9 studio — The Quintet Method",
+    audioLabel: "v10 studio — The Quintet Method",
     durationHint: "5:16",
     meta: "Piano · bass · drums · sax · trumpet · A Dorian · ~115 BPM · 5:16",
     groupKey: "catalog",
-    footnote: "3-phase pipeline: algorithm + LLM prune + LLM add. 3.76× faster than pure-LLM composition.",
+    footnote: "Head-first composition with motivic development — the foundational pattern for all future jazz work.",
   },
 ];
 
@@ -211,8 +211,8 @@ const Index = () => {
             structured score generation — four through free composition with
             AI critique, two arrangements of the same "Modal Wind" theme
             built through constraint prompting, and one hard-bop quintet
-            composed by a 3-phase algorithm + LLM pipeline. Click in to
-            hear the work — and the process.
+            composed head-first with verified motivic development across
+            its solos. Click in to hear the work — and the process.
           </p>
         </div>
       </section>
