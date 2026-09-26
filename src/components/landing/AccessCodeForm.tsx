@@ -25,7 +25,7 @@ const AccessCodeForm = () => {
     setSubmitting(true);
     try {
       await postAuth(trimmed);
-      navigate("/auth-success");
+      navigate("/app");
     } catch (err: unknown) {
       setError(messageFor(err));
     } finally {

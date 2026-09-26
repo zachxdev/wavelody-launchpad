@@ -24,7 +24,8 @@ binding = "WAVELODY_CODES"
 # Replace with the id printed by `wrangler kv:namespace create wavelody-codes`
 # at deploy time. Leaving the placeholder here so `wrangler dev` errors
 # loudly if anyone tries to run it without provisioning the namespace first.
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "0000000000000000000000000000000a"
+preview_id = "0000000000000000000000000000000a"
 
 [vars]
 # Public, non-secret config goes here. Secrets (WAVELODY_JWT_SECRET) live in

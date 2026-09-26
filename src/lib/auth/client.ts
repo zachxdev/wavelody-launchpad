@@ -49,7 +49,8 @@ export async function postAuth(code: string): Promise<StoredSession> {
     throw new AuthError(resp.status, message);
   }
 
-  const data = (await resp.json()) as StoredSession;
+  const raw = (await resp.json()) as { token: string; session: SessionInfo };
+  const data: StoredSession = { token: raw.token, info: raw.session };
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   return data;
 }
