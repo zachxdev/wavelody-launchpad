@@ -1,4 +1,5 @@
 import { FileText, Layers, Award, Play } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AccessCodeForm from "@/components/landing/AccessCodeForm";
 import { useReveal } from "@/hooks/useReveal";
@@ -127,12 +128,23 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t border-border/60 bg-card/40 px-6 py-10">
         <div className="mx-auto max-w-6xl space-y-2 text-center">
-          <a
-            href="mailto:zach@wavelody.com"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Email
-          </a>
+          <div className="flex items-center justify-center gap-5">
+            <a
+              href="mailto:zach@wavelody.com"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Email
+            </a>
+            <span aria-hidden="true" className="text-muted-foreground/40">
+              ·
+            </span>
+            <Link
+              to="/showcase"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Listen — The Living Engine
+            </Link>
+          </div>
           <p className="text-xs text-muted-foreground/70">© 2026 Wavelody.</p>
         </div>
       </footer>

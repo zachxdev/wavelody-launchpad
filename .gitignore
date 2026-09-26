@@ -27,3 +27,7 @@ dist-ssr
 # Per-session Claude Code worktrees — never commit these, they belong to a
 # specific session and rot the moment the session ends.
 .claude/worktrees/
+
+# Showcase audio — large pre-rendered Wavelody mp3s (3–9 MB each, ~70 MB total).
+# Copy from D:\GitHub\MusicDSL\ via public/showcase/README.md before `npm run dev`.
+public/showcase/*.mp3
